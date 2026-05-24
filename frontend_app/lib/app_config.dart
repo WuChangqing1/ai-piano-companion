@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 全局应用配置 - 持久化 baseUrl,允许用户在设置页修改。
 class AppConfig {
   static const String _kBaseUrl = 'base_url';
-  static const String defaultBaseUrl = 'http://192.168.1.100:8000';
+  static const String defaultBaseUrl = 'http://localhost:8000';
 
   static late SharedPreferences _prefs;
 

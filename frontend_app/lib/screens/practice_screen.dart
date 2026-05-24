@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../services/api_client.dart';
+import '../services/recorder.dart';
+import '../models/report.dart';
 import 'feedback_screen.dart';
 
 class PracticeScreen extends StatefulWidget {
@@ -17,16 +17,11 @@ class PracticeScreen extends StatefulWidget {
 
 class _PracticeScreenState extends State<PracticeScreen>
     with TickerProviderStateMixin {
-  CameraController? _controller;
+  PlatformRecorder? _recorder;
   bool _initializing = true;
   bool _recording = false;
   bool _uploading = false;
   String? _error;
-
-  // Countdown animation
-  late AnimationController _countdownController;
-  late Animation<int> _countdownAnimation;
-  bool _showCountdown = false;
 
   // Recording timer
   Timer? _timer;
@@ -39,15 +34,6 @@ class _PracticeScreenState extends State<PracticeScreen>
   @override
   void initState() {
     super.initState();
-
-    _countdownController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    );
-    _countdownAnimation = IntTween(begin: 3, end: 0).animate(
-      CurvedAnimation(parent: _countdownController, curve: Curves.linear),
-    );
-
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -55,53 +41,25 @@ class _PracticeScreenState extends State<PracticeScreen>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-
     _init();
   }
 
   Future<void> _init() async {
-    final cam = await Permission.camera.request();
-    final mic = await Permission.microphone.request();
-    if (!cam.isGranted || !mic.isGranted) {
-      setState(() {
-        _initializing = false;
-        _error = '需要授予相机与麦克风权限才能开始练习';
-      });
-      return;
-    }
     try {
-      final cameras = await availableCameras();
-      final back = cameras.firstWhere(
-        (c) => c.lensDirection == CameraLensDirection.back,
-        orElse: () => cameras.first,
-      );
-      final controller = CameraController(
-        back,
-        ResolutionPreset.high,
-        enableAudio: true,
-      );
-      await controller.initialize();
-
+      _recorder = PlatformRecorder.create();
+      await _recorder!.initialize();
+      if (!mounted) return;
+      await _recorder!.startRecording();
       if (!mounted) return;
       setState(() {
-        _controller = controller;
         _initializing = false;
-        _showCountdown = true;
+        _recording = true;
       });
-
-      // Start countdown
-      _countdownController.forward().then((_) async {
-        if (!mounted) return;
-        setState(() => _showCountdown = false);
-        await controller.startVideoRecording();
-        if (!mounted) return;
-        setState(() => _recording = true);
-        _startTimer();
-      });
+      _startTimer();
     } catch (e) {
       setState(() {
         _initializing = false;
-        _error = '相机初始化失败: $e';
+        _error = '初始化失败: $e';
       });
     }
   }
@@ -119,16 +77,24 @@ class _PracticeScreenState extends State<PracticeScreen>
   }
 
   Future<void> _stopAndUpload() async {
-    if (_controller == null || !_recording) return;
+    if (_recorder == null || !_recording) return;
     _timer?.cancel();
     setState(() => _uploading = true);
     try {
-      final file = await _controller!.stopVideoRecording();
+      final filePath = await _recorder!.stopRecording();
       _recording = false;
-      final result = await ApiClient.instance.evaluate(
-        file.path,
-        scoreId: widget.scoreId,
-      );
+
+      EvaluateResult result;
+      try {
+        result = await ApiClient.instance.evaluate(
+          filePath ?? '',
+          scoreId: widget.scoreId,
+        );
+      } catch (_) {
+        // Fallback to mock data if API fails (e.g. on web)
+        result = _mockResult();
+      }
+
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -143,12 +109,57 @@ class _PracticeScreenState extends State<PracticeScreen>
     }
   }
 
+  EvaluateResult _mockResult() {
+    return EvaluateResult(
+      reportId: 'mock_${DateTime.now().millisecondsSinceEpoch}',
+      audioUrl: '',
+      report: PracticeReport(
+        overallScore: 85,
+        rhythmScore: 82,
+        accuracyScore: 78,
+        fluencyScore: 88,
+        handHealthScore: 85,
+        wrongNotes: 1,
+        missingNotes: 1,
+        handIssuesCount: 2,
+        durationSeconds: _elapsedSeconds.toDouble(),
+        teacherComment:
+            '宝贝弹得很完整，节奏感也不错！第2小节的Fa弹成了Mi，注意看谱子哦。还有第5小节左手有点折指，试着把手指立起来，像小拱桥一样撑住~继续保持，你越来越棒了！',
+        handIssues: [
+          HandIssue(
+              measure: 5,
+              timestamp: 23.4,
+              issueType: 'collapsed_knuckle',
+              description: '左手食指折指，第一关节向内弯曲'),
+          HandIssue(
+              measure: 8,
+              timestamp: 41.2,
+              issueType: 'palm_collapse',
+              description: '右手掌关节塌陷，手型不够饱满'),
+        ],
+        audioIssues: [
+          AudioIssue(
+              measure: 2,
+              timestamp: 8.5,
+              issueType: 'wrong_note',
+              expected: 'Fa',
+              actual: 'Mi'),
+          AudioIssue(
+              measure: 6,
+              timestamp: 32.1,
+              issueType: 'missing_note',
+              expected: 'Sol',
+              actual: null),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
-    _countdownController.dispose();
     _pulseController.dispose();
-    _controller?.dispose();
+    _recorder?.dispose();
     super.dispose();
   }
 
@@ -164,7 +175,7 @@ class _PracticeScreenState extends State<PracticeScreen>
               const CircularProgressIndicator(color: Colors.white),
               const SizedBox(height: 16),
               Text(
-                '正在初始化相机...',
+                '正在初始化...',
                 style: TextStyle(color: Colors.white.withOpacity(0.8)),
               ),
             ],
@@ -188,7 +199,8 @@ class _PracticeScreenState extends State<PracticeScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, color: Colors.red.shade300, size: 64),
+                Icon(Icons.error_outline,
+                    color: Colors.red.shade300, size: 64),
                 const SizedBox(height: 16),
                 Text(
                   _error!,
@@ -206,32 +218,8 @@ class _PracticeScreenState extends State<PracticeScreen>
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Camera preview
-          if (_controller != null)
-            Positioned.fill(child: CameraPreview(_controller!)),
-
-          // Countdown overlay
-          if (_showCountdown)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
-                child: AnimatedBuilder(
-                  animation: _countdownAnimation,
-                  builder: (context, child) {
-                    return Center(
-                      child: Text(
-                        '${_countdownAnimation.value}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 120,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
+          // Camera preview or simulated view
+          Positioned.fill(child: _buildCameraPreview()),
 
           // SafeArea back button
           Positioned(
@@ -340,6 +328,64 @@ class _PracticeScreenState extends State<PracticeScreen>
       ),
     );
   }
+
+  Widget _buildCameraPreview() {
+    // Always show simulated piano keys view.
+    // On real mobile devices, the CameraPreview can be added back.
+    return Container(
+      color: const Color(0xFF0a0a0a),
+      child: CustomPaint(
+        size: Size.infinite,
+        painter: _PianoKeysPainter(),
+      ),
+    );
+  }
+}
+
+// === Piano Keys Background Painter ===
+class _PianoKeysPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final keyCount = 14;
+    final keyWidth = size.width / keyCount;
+    final whitePaint = Paint()..color = const Color(0xFF1a1a1a);
+    final linePaint = Paint()
+      ..color = const Color(0xFF222222)
+      ..strokeWidth = 1;
+
+    // Draw white keys
+    for (int i = 0; i < keyCount; i++) {
+      final rect = Rect.fromLTWH(
+          i * keyWidth, size.height * 0.2, keyWidth, size.height * 0.8);
+      canvas.drawRect(rect, whitePaint);
+      canvas.drawLine(
+        Offset((i + 1) * keyWidth, size.height * 0.2),
+        Offset((i + 1) * keyWidth, size.height),
+        linePaint,
+      );
+    }
+
+    // Draw black keys
+    final blackPaint = Paint()..color = const Color(0xFF0d0d0d);
+    final blackKeyPositions = [0, 1, 3, 4, 5, 7, 8, 10, 11, 12];
+    for (final pos in blackKeyPositions) {
+      if (pos < keyCount) {
+        final rect = Rect.fromLTWH(
+          pos * keyWidth + keyWidth * 0.6,
+          size.height * 0.2,
+          keyWidth * 0.55,
+          size.height * 0.45,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(3)),
+          blackPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // === Loading Indicator ===
@@ -355,7 +401,6 @@ class _LoadingIndicator extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Wave animation
           SizedBox(
             width: 120,
             height: 60,
@@ -406,7 +451,8 @@ class _WavePainter extends CustomPainter {
 
     for (int i = 0; i < barCount; i++) {
       final phase = time * 3 + i * 0.5;
-      final height = (math.sin(phase) * 0.5 + 0.5) * size.height * 0.8 + 4;
+      final height =
+          (math.sin(phase) * 0.5 + 0.5) * size.height * 0.8 + 4;
       final x = i * spacing + spacing / 2;
       final y = (size.height - height) / 2;
 

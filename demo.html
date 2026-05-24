@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 琴伴 - 智能钢琴陪练 Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #1a1a2e;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  /* Phone frame */
+  .phone {
+    width: 390px; height: 844px;
+    background: #f5f3ff;
+    border-radius: 40px;
+    border: 8px solid #222;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 160px; height: 30px; background: #222;
+    border-radius: 0 0 18px 18px; z-index: 100;
+  }
+  .screen { width: 100%; height: 100%; position: relative; overflow-y: auto; overflow-x: hidden; }
+  .page { display: none; width: 100%; min-height: 100%; }
+  .page.active { display: block; }
+
+  /* === Status Bar === */
+  .status-bar {
+    height: 50px; padding: 14px 24px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; font-weight: 600; color: #333;
+    position: relative; z-index: 50;
+  }
+  .status-bar.light { color: #fff; }
+
+  /* === Home Page === */
+  #home { background: #f5f3ff; }
+  .home-header {
+    padding: 0 24px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .home-title { font-size: 20px; font-weight: 700; color: #1f2937; }
+  .home-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: #ede7ff; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 18px;
+    transition: all 0.2s;
+  }
+  .icon-btn:hover { background: #ddd6fe; transform: scale(1.05); }
+  .score-card {
+    margin: 20px 24px; padding: 20px;
+    background: linear-gradient(135deg, #ede7ff, #f6f1ff);
+    border-radius: 20px;
+  }
+  .score-label { font-size: 13px; color: #6b7280; }
+  .score-name { font-size: 20px; font-weight: 600; color: #1f2937; margin-top: 6px; }
+  .home-body { padding: 0 24px; display: flex; flex-direction: column; gap: 14px; }
+  .btn {
+    padding: 18px; border: none; border-radius: 16px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.2s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .btn:active { transform: translateY(0); }
+  .btn-outline {
+    background: #ede7ff; color: #6d28d9;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: #fff; font-size: 20px; padding: 22px;
+  }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .home-hint {
+    text-align: center; color: #9ca3af; font-size: 14px;
+    line-height: 1.8; margin-top: auto; padding: 40px 24px;
+  }
+
+  /* === Practice Page === */
+  #practice { background: #000; }
+  .practice-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 10;
+  }
+  .rec-badge {
+    position: absolute; top: 60px; left: 24px;
+    background: rgba(239,68,68,0.9); padding: 6px 14px;
+    border-radius: 20px; display: flex; align-items: center; gap: 6px;
+    color: #fff; font-size: 13px; font-weight: 700;
+  }
+  .rec-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #fff; animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .practice-center {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 20px;
+  }
+  .practice-hint {
+    color: rgba(255,255,255,0.7); font-size: 16px;
+    text-align: center; line-height: 1.6;
+  }
+  .stop-btn {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: #fff; border: 6px solid #ef4444;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: all 0.2s;
+  }
+  .stop-btn:hover { transform: scale(1.05); }
+  .stop-icon {
+    width: 32px; height: 32px; background: #ef4444; border-radius: 6px;
+  }
+  .timer { color: #fff; font-size: 48px; font-weight: 300; font-variant-numeric: tabular-nums; }
+  .video-preview {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+
+  /* === Loading Page === */
+  #loading { background: #000; }
+  .loading-center {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 24px;
+  }
+  .loading-spinner {
+    width: 60px; height: 60px; border: 4px solid rgba(139,92,246,0.2);
+    border-top-color: #8b5cf6; border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: #fff; font-size: 18px; }
+  .loading-sub { color: rgba(255,255,255,0.5); font-size: 14px; }
+
+  /* === Feedback Page === */
+  #feedback { background: #f5f3ff; }
+  .feedback-header {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    padding: 50px 24px 30px; text-align: center;
+    border-radius: 0 0 30px 30px;
+  }
+  .feedback-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .feedback-title { color: #fff; font-size: 18px; font-weight: 600; }
+  .back-btn {
+    background: none; border: none; color: #fff;
+    font-size: 24px; cursor: pointer; padding: 4px;
+  }
+  /* Avatar */
+  .avatar-wrap {
+    width: 120px; height: 120px; margin: 0 auto 16px;
+    position: relative;
+  }
+  .avatar-face {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: #ffe0b2; position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .avatar-hair {
+    position: absolute; top: -5px; left: 5px; right: 5px; height: 55px;
+    background: #6d4c41; border-radius: 60px 60px 0 0;
+  }
+  .avatar-eye {
+    position: absolute; width: 12px; height: 12px;
+    background: #3e2723; border-radius: 50%; top: 52px;
+  }
+  .avatar-eye.left { left: 30px; }
+  .avatar-eye.right { right: 30px; }
+  .avatar-eye::after {
+    content: ''; position: absolute; width: 4px; height: 4px;
+    background: #fff; border-radius: 50%; top: 2px; left: 2px;
+  }
+  .avatar-blush {
+    position: absolute; width: 18px; height: 12px;
+    background: rgba(255,171,145,0.5); border-radius: 50%; top: 62px;
+  }
+  .avatar-blush.left { left: 16px; }
+  .avatar-blush.right { right: 16px; }
+  .avatar-mouth {
+    position: absolute; width: 24px; height: 14px;
+    background: #d84315; border-radius: 50%;
+    bottom: 28px; left: 50%; transform: translateX(-50%);
+    transition: height 0.2s;
+  }
+  .avatar-mouth.speaking { animation: talk 0.4s infinite alternate; }
+  @keyframes talk {
+    0% { height: 8px; width: 20px; }
+    100% { height: 18px; width: 16px; }
+  }
+  .replay-btn {
+    background: rgba(255,255,255,0.15); border: none;
+    color: #fff; padding: 10px 20px; border-radius: 20px;
+    cursor: pointer; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .replay-btn:hover { background: rgba(255,255,255,0.25); }
+
+  .feedback-body { padding: 20px; }
+  /* Score Gauge */
+  .gauge-card {
+    background: #fff; border-radius: 20px; padding: 24px;
+    text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    margin-bottom: 16px;
+    animation: fadeUp 0.6s ease-out;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .gauge-ring {
+    width: 160px; height: 160px; margin: 0 auto 16px;
+    position: relative;
+  }
+  .gauge-ring svg { transform: rotate(-90deg); }
+  .gauge-bg { fill: none; stroke: #e5e7eb; stroke-width: 10; }
+  .gauge-fill {
+    fill: none; stroke-width: 10; stroke-linecap: round;
+    transition: stroke-dashoffset 1.5s ease-out;
+  }
+  .gauge-score {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .gauge-num { font-size: 48px; font-weight: 700; }
+  .gauge-label { font-size: 13px; color: #6b7280; }
+  .gauge-duration {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f5f3ff; padding: 8px 16px; border-radius: 12px;
+    font-size: 13px; color: #6b7280;
+  }
+
+  /* Comment Card */
+  .comment-card {
+    background: linear-gradient(135deg, #fffbeb, #fff7ed);
+    border: 1px solid #fed7aa; border-radius: 16px;
+    padding: 20px; margin-bottom: 16px;
+    animation: fadeUp 0.6s ease-out 0.3s both;
+  }
+  .comment-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .comment-icon {
+    width: 32px; height: 32px; background: #fb923c;
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #fff; font-size: 16px;
+  }
+  .comment-title { font-size: 16px; font-weight: 600; color: #92400e; }
+  .comment-text {
+    font-size: 15px; line-height: 1.8; color: #78350f;
+    min-height: 50px;
+  }
+  .comment-cursor {
+    display: inline-block; width: 2px; height: 16px;
+    background: #78350f; animation: cursorBlink 0.8s infinite;
+    vertical-align: text-bottom; margin-left: 2px;
+  }
+  @keyframes cursorBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Radar / Metrics */
+  .metrics-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 16px;
+    animation: fadeUp 0.6s ease-out 0.5s both;
+  }
+  .metric-card {
+    background: #fff; border-radius: 12px; padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .metric-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 10px;
+  }
+  .metric-label { font-size: 13px; color: #6b7280; font-weight: 500; }
+  .metric-score { font-size: 28px; font-weight: 700; margin-top: 4px; }
+
+  /* Issues */
+  .issues-card {
+    background: #fff; border-radius: 16px; padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 16px;
+    animation: fadeUp 0.6s ease-out 0.7s both;
+  }
+  .issues-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .issues-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .issues-title { font-size: 16px; font-weight: 600; color: #1f2937; flex: 1; }
+  .issues-count {
+    padding: 4px 10px; border-radius: 12px;
+    font-size: 12px; font-weight: 600;
+  }
+  .issue-item {
+    background: #f9fafb; border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 12px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .issue-measure {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+  .issue-info { flex: 1; }
+  .issue-subtitle { font-size: 14px; font-weight: 600; color: #1f2937; }
+  .issue-desc { font-size: 13px; color: #6b7280; margin-top: 2px; }
+  .issue-time {
+    padding: 4px 8px; background: #e5e7eb; border-radius: 6px;
+    font-size: 11px; font-weight: 600; color: #6b7280;
+  }
+
+  /* Reports Page */
+  #reports { background: #f5f3ff; }
+  .reports-list { padding: 16px; }
+  .report-item {
+    background: #fff; border-radius: 12px; padding: 16px;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .report-score-badge {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #ede7ff; display: flex; align-items: center;
+    justify-content: center; font-size: 18px; font-weight: 700;
+    color: #6d28d9;
+  }
+  .report-info { flex: 1; }
+  .report-comment {
+    font-size: 14px; color: #374151;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .report-date { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+  .empty-state { text-align: center; padding: 80px 24px; color: #9ca3af; }
+
+  /* Settings Page */
+  #settings { background: #f5f3ff; }
+  .settings-body { padding: 16px; }
+  .settings-section {
+    font-size: 14px; font-weight: 600; color: #6d28d9;
+    margin: 20px 0 10px; padding-left: 4px;
+  }
+  .settings-section:first-child { margin-top: 8px; }
+  .settings-field { margin-bottom: 12px; }
+  .settings-field label {
+    display: block; font-size: 13px; color: #6b7280;
+    margin-bottom: 4px; font-weight: 500;
+  }
+  .settings-field input, .settings-field textarea {
+    width: 100%; padding: 12px; border: 1px solid #d1d5db;
+    border-radius: 10px; font-size: 14px; font-family: inherit;
+    background: #fff;
+  }
+  .settings-field input:focus, .settings-field textarea:focus {
+    outline: none; border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+  }
+  .preset-chips {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+  }
+  .preset-chip {
+    padding: 6px 14px; border-radius: 20px;
+    background: #ede7ff; border: 1px solid #ddd6fe;
+    font-size: 13px; color: #6d28d9; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .preset-chip:hover { background: #ddd6fe; }
+  .save-btn {
+    width: 100%; padding: 16px; margin-top: 24px;
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: #fff; border: none; border-radius: 14px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  .save-btn:hover { opacity: 0.9; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #1f2937; color: #fff; padding: 12px 24px;
+    border-radius: 12px; font-size: 14px; z-index: 200;
+    animation: toastIn 0.3s ease-out;
+    white-space: nowrap;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* File input hidden */
+  .hidden { display: none; }
+
+  /* Scrollbar */
+  .screen::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="screen" id="screenContainer">
+
+    <!-- ========== HOME ========== -->
+    <div class="page active" id="home">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="home-actions">
+          <button class="icon-btn" onclick="showPage('reports')" title="历史报告">📊</button>
+          <button class="icon-btn" onclick="showPage('settings')" title="设置">⚙️</button>
+        </div>
+      </div>
+      <div class="home-header">
+        <div class="home-title">AI 琴伴</div>
+      </div>
+      <div class="score-card">
+        <div class="score-label">当前曲谱</div>
+        <div class="score-name" id="scoreName">尚未上传</div>
+      </div>
+      <div class="home-body">
+        <button class="btn btn-outline" id="uploadScoreBtn" onclick="document.getElementById('scoreInput').click()">
+          📄 <span id="uploadScoreText">上传曲谱</span>
+        </button>
+        <input type="file" id="scoreInput" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="uploadScore(this)">
+        <button class="btn btn-primary" onclick="startPractice()">
+          ▶️ 开始练习
+        </button>
+      </div>
+      <div class="home-hint">
+        把手机后置摄像头对准琴键<br>开始你的沉浸式练习吧 ♪
+      </div>
+    </div>
+
+    <!-- ========== PRACTICE ========== -->
+    <div class="page" id="practice">
+      <video id="videoPreview" class="video-preview" muted loop playsinline></video>
+      <div class="practice-overlay">
+        <div class="rec-badge"><div class="rec-dot"></div> REC</div>
+        <div class="practice-center">
+          <div class="practice-hint" id="practiceHint">
+            选择一个练琴视频<br>模拟录制过程
+          </div>
+          <div class="timer" id="practiceTimer">00:00</div>
+          <button class="stop-btn" id="stopBtn" onclick="stopPractice()">
+            <div class="stop-icon"></div>
+          </button>
+          <button class="btn btn-outline" style="color:#fff;background:rgba(255,255,255,0.15);margin-top:10px"
+                  onclick="document.getElementById('videoInput').click()">
+            📁 选择视频文件
+          </button>
+          <input type="file" id="videoInput" class="hidden" accept=".mp4,.mov,.m4v,.webm" onchange="selectVideo(this)">
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== LOADING ========== -->
+    <div class="page" id="loading">
+      <div class="loading-center">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">AI 老师正在思考…</div>
+        <div class="loading-sub" id="loadingSub">正在分析手型与音频</div>
+      </div>
+    </div>
+
+    <!-- ========== FEEDBACK ========== -->
+    <div class="page" id="feedback">
+      <div class="feedback-header">
+        <div class="feedback-top">
+          <button class="back-btn" onclick="showPage('home')">←</button>
+          <div class="feedback-title">练习反馈</div>
+          <button class="back-btn" style="visibility:hidden">←</button>
+        </div>
+        <div class="avatar-wrap">
+          <div class="avatar-face">
+            <div class="avatar-hair"></div>
+            <div class="avatar-eye left"></div>
+            <div class="avatar-eye right"></div>
+            <div class="avatar-blush left"></div>
+            <div class="avatar-blush right"></div>
+            <div class="avatar-mouth" id="avatarMouth"></div>
+          </div>
+        </div>
+        <button class="replay-btn" onclick="replayAudio()">🔊 再听一遍</button>
+      </div>
+      <div class="feedback-body" id="feedbackBody">
+        <!-- Dynamically filled -->
+      </div>
+    </div>
+
+    <!-- ========== REPORTS ========== -->
+    <div class="page" id="reports">
+      <div class="status-bar">
+        <button class="back-btn" style="color:#333" onclick="showPage('home')">←</button>
+        <span style="font-weight:600;color:#1f2937">历史报告</span>
+        <span style="width:40px"></span>
+      </div>
+      <div class="reports-list" id="reportsList">
+        <div class="empty-state">还没有练习记录哦</div>
+      </div>
+    </div>
+
+    <!-- ========== SETTINGS ========== -->
+    <div class="page" id="settings">
+      <div class="status-bar">
+        <button class="back-btn" style="color:#333" onclick="showPage('home')">←</button>
+        <span style="font-weight:600;color:#1f2937">设置</span>
+        <button class="icon-btn" onclick="loadSettings()" style="font-size:14px">🔄</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-section">后端服务</div>
+        <div class="settings-field">
+          <label>后端 Base URL</label>
+          <input id="setBaseUrl" value="http://localhost:8000">
+        </div>
+
+        <div class="settings-section">LLM 服务（自定义模型 API）</div>
+        <div class="preset-chips">
+          <span class="preset-chip" onclick="applyPreset('deepseek')">DeepSeek</span>
+          <span class="preset-chip" onclick="applyPreset('qwen')">通义千问</span>
+          <span class="preset-chip" onclick="applyPreset('glm')">智谱 GLM</span>
+          <span class="preset-chip" onclick="applyPreset('kimi')">Moonshot</span>
+          <span class="preset-chip" onclick="applyPreset('ollama')">本地 Ollama</span>
+        </div>
+        <div class="settings-field">
+          <label>LLM Base URL</label>
+          <input id="setLlmUrl" value="https://api.deepseek.com/v1">
+        </div>
+        <div class="settings-field">
+          <label>API Key</label>
+          <input id="setApiKey" type="password" placeholder="请输入（留空不修改）">
+        </div>
+        <div class="settings-field">
+          <label>Model 名称</label>
+          <input id="setModel" value="deepseek-chat">
+        </div>
+
+        <div class="settings-section">TTS 语音</div>
+        <div class="settings-field">
+          <label>引擎</label>
+          <input id="setTtsEngine" value="edge-tts">
+        </div>
+        <div class="settings-field">
+          <label>Voice</label>
+          <input id="setTtsVoice" value="zh-CN-XiaoxiaoNeural">
+        </div>
+
+        <button class="save-btn" onclick="saveSettings()">保存全部</button>
+        <button class="save-btn" style="background:#374151;margin-top:10px" onclick="testLLM()">测试 LLM 连通性</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== State =====
+let baseUrl = localStorage.getItem('baseUrl') || 'http://localhost:8000';
+let scoreId = null;
+let selectedVideo = null;
+let timerInterval = null;
+let timerSeconds = 0;
+let currentAudioUrl = null;
+let currentAudio = null;
+
+// ===== Navigation =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('screenContainer').scrollTop = 0;
+  if (id === 'reports') loadReports();
+  if (id === 'settings') loadSettings();
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ===== Upload Score =====
+async function uploadScore(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('uploadScoreText').textContent = '上传中…';
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('title', file.name);
+    const res = await fetch(`${baseUrl}/api/upload_score`, { method: 'POST', body: form });
+    const data = await res.json();
+    scoreId = data.score_id;
+    document.getElementById('scoreName').textContent = file.name;
+    toast('曲谱解析成功 ✓');
+  } catch (e) {
+    toast('上传失败: ' + e.message);
+  } finally {
+    document.getElementById('uploadScoreText').textContent = '上传曲谱';
+    input.value = '';
+  }
+}
+
+// ===== Practice =====
+function startPractice() {
+  showPage('practice');
+  timerSeconds = 0;
+  document.getElementById('practiceTimer').textContent = '00:00';
+  document.getElementById('practiceHint').style.display = 'block';
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const s = String(timerSeconds % 60).padStart(2, '0');
+    document.getElementById('practiceTimer').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function selectVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  selectedVideo = file;
+  document.getElementById('practiceHint').textContent = `已选择: ${file.name}`;
+  // Preview the video
+  const url = URL.createObjectURL(file);
+  const video = document.getElementById('videoPreview');
+  video.src = url;
+  video.muted = true;
+  video.play().catch(() => {});
+  toast('视频已选择，点击停止按钮提交');
+  input.value = '';
+}
+
+async function stopPractice() {
+  clearInterval(timerInterval);
+
+  // If no video selected, create a dummy blob for demo
+  if (!selectedVideo) {
+    toast('未选择视频，使用模拟数据演示');
+    // Create a small dummy file
+    selectedVideo = new File([new Blob(['dummy'], { type: 'video/mp4' })], 'demo.mp4', { type: 'video/mp4' });
+  }
+
+  showPage('loading');
+  document.getElementById('loadingSub').textContent = '正在分析手型与音频…';
+
+  try {
+    const form = new FormData();
+    form.append('file', selectedVideo);
+    if (scoreId) form.append('score_id', scoreId);
+
+    const res = await fetch(`${baseUrl}/api/evaluate`, { method: 'POST', body: form });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      showFeedback(data);
+    } else {
+      toast('评估失败');
+      showPage('home');
+    }
+  } catch (e) {
+    toast('请求失败: ' + e.message);
+    showPage('home');
+  }
+  selectedVideo = null;
+}
+
+// ===== Feedback =====
+function showFeedback(data) {
+  const r = data.report;
+  currentAudioUrl = data.audio_url;
+
+  // Build feedback HTML
+  const scoreColor = r.overall_score >= 90 ? '#10b981' : r.overall_score >= 75 ? '#f59e0b' : '#ef4444';
+  const circumference = 2 * Math.PI * 68;
+  const offset = circumference * (1 - r.overall_score / 100);
+
+  let html = `
+    <div class="gauge-card">
+      <div class="gauge-ring">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle class="gauge-bg" cx="80" cy="80" r="68"/>
+          <circle class="gauge-fill" cx="80" cy="80" r="68"
+            stroke="${scoreColor}"
+            stroke-dasharray="${circumference}"
+            stroke-dashoffset="${circumference}"
+            id="gaugeCircle"/>
+        </svg>
+        <div class="gauge-score">
+          <div class="gauge-num" id="scoreNum" style="color:${scoreColor}">0</div>
+          <div class="gauge-label">综合评分</div>
+        </div>
+      </div>
+      <div class="gauge-duration">⏱ 练习时长 ${Math.round(r.duration_seconds)} 秒</div>
+    </div>
+
+    <div class="comment-card">
+      <div class="comment-header">
+        <div class="comment-icon">❝</div>
+        <div class="comment-title">老师的话</div>
+      </div>
+      <div class="comment-text" id="commentText"></div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6">📊</div>
+        <div class="metric-label">节奏稳定</div>
+        <div class="metric-score" style="color:#3b82f6">${r.rhythm_score}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:#10b981">🎵</div>
+        <div class="metric-label">音准准确</div>
+        <div class="metric-score" style="color:#10b981">${r.accuracy_score}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b">🌊</div>
+        <div class="metric-label">流畅度</div>
+        <div class="metric-score" style="color:#f59e0b">${r.fluency_score}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6">✋</div>
+        <div class="metric-label">手型健康</div>
+        <div class="metric-score" style="color:#8b5cf6">${r.hand_health_score}</div>
+      </div>
+    </div>
+  `;
+
+  // Hand issues
+  if (r.hand_issues && r.hand_issues.length > 0) {
+    html += `<div class="issues-card">
+      <div class="issues-header">
+        <div class="issues-icon" style="background:rgba(249,115,22,0.1);color:#f97316">✋</div>
+        <div class="issues-title">手型问题</div>
+        <div class="issues-count" style="background:rgba(249,115,22,0.1);color:#f97316">${r.hand_issues.length} 处</div>
+      </div>`;
+    r.hand_issues.forEach(i => {
+      html += `<div class="issue-item">
+        <div class="issue-measure" style="background:rgba(249,115,22,0.1);color:#f97316">${i.measure}</div>
+        <div class="issue-info">
+          <div class="issue-subtitle">第 ${i.measure} 小节</div>
+          <div class="issue-desc">${i.description}</div>
+        </div>
+        <div class="issue-time">${i.timestamp}s</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Audio issues
+  if (r.audio_issues && r.audio_issues.length > 0) {
+    html += `<div class="issues-card">
+      <div class="issues-header">
+        <div class="issues-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6">🎵</div>
+        <div class="issues-title">音准问题</div>
+        <div class="issues-count" style="background:rgba(139,92,246,0.1);color:#8b5cf6">${r.audio_issues.length} 处</div>
+      </div>`;
+    r.audio_issues.forEach(i => {
+      const desc = i.issue_type === 'missing_note'
+        ? `漏弹 ${i.expected || '?'}`
+        : `应为 ${i.expected || '?'},弹成了 ${i.actual || '?'}`;
+      html += `<div class="issue-item">
+        <div class="issue-measure" style="background:rgba(139,92,246,0.1);color:#8b5cf6">${i.measure}</div>
+        <div class="issue-info">
+          <div class="issue-subtitle">第 ${i.measure} 小节</div>
+          <div class="issue-desc">${desc}</div>
+        </div>
+        <div class="issue-time">${i.timestamp}s</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('feedbackBody').innerHTML = html;
+  showPage('feedback');
+
+  // Animate score
+  setTimeout(() => {
+    document.getElementById('gaugeCircle').style.strokeDashoffset = offset;
+    animateNumber('scoreNum', 0, r.overall_score, 1500);
+  }, 100);
+
+  // Typewriter effect
+  typewriter('commentText', r.teacher_comment, 2000);
+
+  // Play audio + animate avatar
+  if (currentAudioUrl) {
+    playAudio(currentAudioUrl);
+  }
+}
+
+function animateNumber(id, from, to, duration) {
+  const el = document.getElementById(id);
+  const start = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(from + (to - from) * eased);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function typewriter(id, text, duration) {
+  const el = document.getElementById(id);
+  const charDelay = Math.min(duration / text.length, 80);
+  let i = 0;
+  el.innerHTML = '<span class="comment-cursor"></span>';
+  const interval = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(interval);
+      el.innerHTML = text;
+      return;
+    }
+    el.innerHTML = text.substring(0, i + 1) + '<span class="comment-cursor"></span>';
+    i++;
+  }, charDelay);
+}
+
+function playAudio(url) {
+  if (currentAudio) currentAudio.pause();
+  currentAudio = new Audio(url);
+  const mouth = document.getElementById('avatarMouth');
+  currentAudio.onplay = () => mouth.classList.add('speaking');
+  currentAudio.onended = () => mouth.classList.remove('speaking');
+  currentAudio.onerror = () => mouth.classList.remove('speaking');
+  currentAudio.play().catch(() => mouth.classList.remove('speaking'));
+}
+
+function replayAudio() {
+  if (currentAudioUrl) playAudio(currentAudioUrl);
+}
+
+// ===== Reports =====
+async function loadReports() {
+  try {
+    const res = await fetch(`${baseUrl}/api/reports`);
+    const list = await res.json();
+    const container = document.getElementById('reportsList');
+    if (!list || list.length === 0) {
+      container.innerHTML = '<div class="empty-state">还没有练习记录哦</div>';
+      return;
+    }
+    container.innerHTML = list.map(r => `
+      <div class="report-item">
+        <div class="report-score-badge">${r.overall_score}</div>
+        <div class="report-info">
+          <div class="report-comment">${r.teacher_comment || '无评语'}</div>
+          <div class="report-date">${r.created_at || ''}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('reportsList').innerHTML =
+      '<div class="empty-state">加载失败，请检查后端连接</div>';
+  }
+}
+
+// ===== Settings =====
+const presets = {
+  deepseek: { url: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+  qwen:     { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
+  glm:      { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4' },
+  kimi:     { url: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k' },
+  ollama:   { url: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:7b' },
+};
+
+function applyPreset(name) {
+  const p = presets[name];
+  document.getElementById('setLlmUrl').value = p.url;
+  document.getElementById('setModel').value = p.model;
+  toast(`已切换到 ${name}`);
+}
+
+async function loadSettings() {
+  try {
+    const res = await fetch(`${baseUrl}/api/config`);
+    const cfg = await res.json();
+    document.getElementById('setLlmUrl').value = cfg.llm?.base_url || '';
+    document.getElementById('setModel').value = cfg.llm?.model || '';
+    document.getElementById('setTtsEngine').value = cfg.tts?.engine || 'edge-tts';
+    document.getElementById('setTtsVoice').value = cfg.tts?.voice || '';
+    if (cfg.llm?.api_key) {
+      document.getElementById('setApiKey').placeholder = `已保存 (${cfg.llm.api_key})，留空不修改`;
+    }
+    toast('配置已加载');
+  } catch (e) {
+    toast('加载失败: ' + e.message);
+  }
+}
+
+async function saveSettings() {
+  const newBase = document.getElementById('setBaseUrl').value.trim();
+  if (newBase) { baseUrl = newBase; localStorage.setItem('baseUrl', newBase); }
+
+  const patch = {
+    llm: {
+      base_url: document.getElementById('setLlmUrl').value.trim(),
+      model: document.getElementById('setModel').value.trim(),
+    },
+    tts: {
+      engine: document.getElementById('setTtsEngine').value.trim(),
+      voice: document.getElementById('setTtsVoice').value.trim(),
+    },
+  };
+  const key = document.getElementById('setApiKey').value.trim();
+  if (key) patch.llm.api_key = key;
+
+  try {
+    await fetch(`${baseUrl}/api/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    toast('已保存，新配置立即生效 ✓');
+  } catch (e) {
+    toast('保存失败: ' + e.message);
+  }
+}
+
+async function testLLM() {
+  try {
+    toast('测试中…');
+    const res = await fetch(`${baseUrl}/api/config/test`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) toast('连通成功 ✓ ' + (data.sample || ''));
+    else toast('失败: ' + (data.error || '未知错误'));
+  } catch (e) {
+    toast('测试失败: ' + e.message);
+  }
+}
+
+// Init
+document.getElementById('setBaseUrl').value = baseUrl;
+</script>
+</body>
+</html>
