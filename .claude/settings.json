@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(git config *)",
+      "Bash(git -c http.proxy=\"\" -c https.proxy=\"\" push -u origin master)",
+      "Bash(python -m venv backend/.venv)",
+      "Bash(backend\\\\.venv\\\\Scripts\\\\activate)",
+      "Bash(pip install *)",
+      "Bash(backend/.venv/Scripts/python.exe --version)",
+      "Bash(backend/.venv/Scripts/pip.exe install *)",
+      "Bash(set PYTHONUTF8=1)",
+      "Bash(backend/.venv/Scripts/python.exe -m pip install --upgrade pip)"
     ]
   }
 }

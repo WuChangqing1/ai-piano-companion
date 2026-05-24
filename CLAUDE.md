@@ -171,11 +171,34 @@
 - PR 目标分支：main
 
 ## 项目基本信息
-- 项目名称：[就业智能体]
-- 技术栈：[填写]
-- 开发语言：[填写]
-- 包管理器：[填写]
+- 项目名称：AI 琴伴（AI Piano Companion）
+- 技术栈：FastAPI + SQLite + Flutter
+- 开发语言：Python 3.10+ / Dart 3.3+
+- 包管理器：pip（后端）/ pub（前端）
+- 虚拟环境：backend/.venv（Python venv）
 - 远程仓库：[https://github.com/WuChangqing1/ai-piano-companion.git]
+
+## 虚拟环境规范（最高优先级）
+
+**所有 Python 命令必须在虚拟环境中运行，禁止使用全局环境。**
+
+### 启动规则（每次会话必须执行）
+1. 检查虚拟环境是否存在：`ls backend/.venv`
+2. 如不存在，创建：`python -m venv backend/.venv`
+3. **激活虚拟环境后再执行任何 Python 命令**：
+   - Windows: `backend\.venv\Scripts\activate && <command>`
+   - Linux/macOS: `source backend/.venv/bin/activate && <command>`
+4. 安装依赖：`pip install -r backend/requirements.txt`
+5. 后续所有 `python`、`pip`、`uvicorn` 命令均在激活状态下执行
+
+### 多环境管理
+- **主环境** `backend/.venv`：FastAPI 后端开发（默认）
+- **模型环境**（按需创建）：如需额外安装 PyTorch/MediaPipe 等重型依赖，创建独立虚拟环境 `backend/.venv-models`，避免污染主环境
+- 切换环境时明确告知用户当前使用的环境
+
+### 规范
+- 新增 Python 依赖后立即更新 `backend/requirements.txt`
+- 虚拟环境目录已在 `.gitignore` 中排除，不会提交到 git
 
 ## 代码规范
 - 文件名：驼峰命名法
