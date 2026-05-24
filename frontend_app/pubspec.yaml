@@ -1,0 +1,38 @@
+name: ai_qinban
+description: AI 琴伴 - 多模态钢琴陪练 App
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.19.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # 网络
+  dio: ^5.7.0
+  # 摄像头录制
+  camera: ^0.11.0+2
+  # 音频播放
+  audioplayers: ^6.1.0
+  # 本地持久化(模型配置 + baseUrl)
+  shared_preferences: ^2.3.2
+  # 文件选择(上传曲谱)
+  file_picker: ^8.1.2
+  # 权限
+  permission_handler: ^11.3.1
+  # 路径
+  path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/avatar/

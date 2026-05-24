@@ -1,0 +1,55 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+.venv/
+venv/
+env/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# === Flutter / Dart ===
+frontend_app/.dart_tool/
+frontend_app/.packages
+frontend_app/.pub-cache/
+frontend_app/.pub/
+frontend_app/build/
+frontend_app/.flutter-plugins
+frontend_app/.flutter-plugins-dependencies
+*.iml
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === 敏感文件 ===
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# === 项目特有 ===
+backend/ai_qinban.db
+backend/uploads/
+backend/static/
+backend/config.json
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === 日志 ===
+*.log
