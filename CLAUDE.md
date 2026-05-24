@@ -166,7 +166,7 @@
 - 推送前确认当前分支和目标分支
 
 ### 远程仓库
-- 远程仓库地址：[https://github.com/WuChangqing1/China-College-Innovation-Contest.git]
+- 远程仓库地址：[https://github.com/WuChangqing1/ai-piano-companion.git]
 - 默认推送分支：develop
 - PR 目标分支：main
 
@@ -175,7 +175,7 @@
 - 技术栈：[填写]
 - 开发语言：[填写]
 - 包管理器：[填写]
-- 远程仓库：[https://github.com/WuChangqing1/China-College-Innovation-Contest.git]
+- 远程仓库：[https://github.com/WuChangqing1/ai-piano-companion.git]
 
 ## 代码规范
 - 文件名：驼峰命名法
