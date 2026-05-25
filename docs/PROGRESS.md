@@ -5,8 +5,8 @@
 
 ## 进行中
 
-- [ ] 确认项目代码完整性，排查缺失功能
-- [ ] Flutter Web 联调与UI优化
+- [ ] 将 `frontend_app/` 未跟踪文件加入 git 并提交
+- [ ] 分支管理：切回 `develop` 分支进行日常开发（当前在 `master`）
 
 ## 待办
 
@@ -17,6 +17,7 @@
 - [ ] 用户鉴权完善（当前为占位实现）
 - [ ] 数字人形象优化（Lottie 动画替换）
 - [ ] Demo 视频录制（30秒展示视频）
+- [ ] Flutter Web 联调与 UI 细节优化
 
 ## 已完成
 
@@ -28,6 +29,7 @@
 - [x] [2026-05-25] practice_screen.dart 重写（移除倒计时、添加钢琴键模拟视图、Mock 数据回退）
 - [x] [2026-05-25] UI 全面重设计：home_screen / feedback_screen / practice_screen / avatar_2d
 - [x] [2026-05-25] feedback_screen 完整重写（圆环评分、雷达图、打字机评语、问题列表、数字人读报告）
+- [x] [2026-05-25] 确认项目代码完整性（后端 + 前端各模块正常）
 - [x] 后端 FastAPI 框架搭建（main.py + 路由模块）
 - [x] 数据库模型设计（users / scores / practice_reports）
 - [x] AI 模型模块 Mock 实现（hand_tracker / audio_amt / omr_parser / llm_client / tts_engine）

@@ -23,6 +23,7 @@ frontend_app/.pub/
 frontend_app/build/
 frontend_app/.flutter-plugins
 frontend_app/.flutter-plugins-dependencies
+frontend_app/android/local.properties
 *.iml
 
 # === IDE ===

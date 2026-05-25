@@ -22,6 +22,14 @@
 **解决**：`powershell Get-NetTCPConnection -LocalPort <port> | Stop-Process`，然后重启。
 **备选端口**：Flutter Web 可用 5000。
 
+### 2026-05-25 分支管理：当前在 master 而非 develop
+
+**问题**：CLAUDE.md 规定日常开发在 `develop` 分支，但当前在 `master` 分支工作，且 master 领先 origin/master 1 个 commit。
+**影响**：不符合项目分支策略，后续 PR 流程会混乱。
+**待办**：将 master 上的新 commit 合并到 develop，切回 develop 继续开发。
+
+---
+
 ### 2026-05-25 pip 安装 GBK 编码错误
 
 **问题**：`pip install` 时报 `UnicodeDecodeError: 'gbk' codec`。
