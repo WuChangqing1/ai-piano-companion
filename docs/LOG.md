@@ -50,6 +50,41 @@
 
 ---
 
+## 2026-05-26 会话
+
+**做了什么**：
+- 排查后端启动报错 `ModuleNotFoundError: No module named 'aiofiles'`
+- 定位根因：`backend/.venv`（Python 3.12）被自动激活，覆盖 Conda `AIqinban` 环境
+- 删除冗余 `.venv`，确认 Conda `AIqinban` 中所有依赖正确安装
+- 验证后端正常启动：`/` 返回服务信息和版本号，`/docs` 返回 Swagger API 文档
+
+**git commit**: 待提交
+
+---
+
+## 2026-05-26 会话（AI 模型真实接入）
+
+**做了什么**：
+- 创建 Conda 环境 `AIqinban`（Python 3.11），安装全部依赖
+- **接入 basic-pitch**：重写 `audio_amt.py`，ONNX 后端音频转录 + MIDI diff 比对（错音/漏音/多余音 + 节奏评分）
+- **启用 MediaPipe Hands**：`hand_tracker.py` 设置 `USE_REAL_MODEL=True`，完善五指独立识别（折指 + 掌关节塌陷）
+- **接入 Oemer**：重写 `omr_parser.py`，CLI 调用 + MusicXML→MIDI 转换
+- **CosyVoice 桥接**：新建 `cosyvoice_bridge.py`，子进程调用 + edge-tts 自动回退
+- 解决 basic-pitch + Python 3.12 不兼容问题 → 迁移到 Conda Python 3.11
+- 解决 numpy 版本冲突（TensorFlow vs opencv）→ 卸载 TF，basic-pitch 走 ONNX
+- 更新 CLAUDE.md（Conda 环境规范）
+- 更新 requirements.txt（完整依赖列表）
+- 更新 docs/（ARCHITECTURE / PROGRESS / DECISIONS）
+- 创建 docs/ToDo.md（用户下一步操作清单）
+
+**下一步**：
+- 安装 ffmpeg
+- 准备测试素材（弹钢琴视频 + 曲谱图片）
+- 逐模块测试（手型 → 音频 → 曲谱 → 全链路）
+- 切回 `develop` 分支
+
+---
+
 ## 2026-05-25 会话（状态检测与文档更新）
 
 **做了什么**：

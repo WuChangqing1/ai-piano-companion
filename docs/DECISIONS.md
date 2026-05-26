@@ -52,4 +52,37 @@
 
 ---
 
-（后续开发过程中自动追加）
+## [2026-05-26] 音频转录选型：basic-pitch 替代 ByteDance Piano Transcription
+
+**决策**：使用 Spotify basic-pitch（ONNX 后端）替换原计划的 ByteDance Piano Transcription。
+
+**为什么**：
+- basic-pitch 轻量（ONNX 推理 ~200MB），ByteDance 方案需 PyTorch 全家桶
+- ONNX 后端与 Oemer 复用同一运行时，减少环境冲突
+- 预训练模型可用，支持多音高检测（polyphonic）
+- Apache 2.0 开源协议友好
+
+**备选方案**：保持 TensorFlow 后端（basic-pitch 也支持），但 ONNX 更轻
+
+---
+
+## [2026-05-26] 虚拟环境迁移：Python venv → Conda
+
+**决策**：从 `backend/.venv` 迁移到 Conda 环境 `AIqinban`（Python 3.11）。
+
+**为什么**：
+- basic-pitch 官方只支持 Python 3.8-3.11，.venv 的 Python 3.12 不兼容
+- Conda 更便于管理 C++ 依赖（MediaPipe、ONNX Runtime）
+- Conda 独立环境方便后续 CosyVoice（PyTorch）隔离
+
+---
+
+## [2026-05-26] 所有 AI 模型统一 Mock 兜底策略
+
+**决策**：4 个 AI 模块（hand_tracker / audio_amt / omr_parser / tts_engine）统一采用"真实模型优先 + 异常回退 Mock"模式。
+
+**为什么**：
+- 确保整条链路在任何环境下都能跑通
+- 模型环境未就绪时不影响 Demo 展示
+- 每个模块的 Mock 异常只触发一次（模块级 _MOCK_FALLBACK 标记），避免反复重试
+- TTS 的 CosyVoice 失败时自动回退 edge-tts

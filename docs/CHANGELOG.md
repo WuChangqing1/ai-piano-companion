@@ -20,6 +20,9 @@
 ### Added
 - [2026-05-25] 提交 Flutter 前端项目文件（`frontend_app/`）+ 一键启动脚本（`start_backend.bat` / `start_flutter_web.bat`）
 
+### Fixed
+- [2026-05-26] 修复后端启动报错：删除冗余 `.venv`，统一使用 Conda `AIqinban` 环境
+
 ### Changed
 - [2026-05-25] `practice_screen.dart` 全面重写：移除 CameraPreview 直接依赖，添加钢琴键模拟视图 + Mock 数据回退
 - [2026-05-25] `home_screen.dart` UI 重设计：渐变头部、曲谱卡片、淡入动画
