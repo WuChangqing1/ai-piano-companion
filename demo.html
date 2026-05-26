@@ -3,582 +3,644 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 琴伴 - 智能钢琴陪练 Demo</title>
+<title>AI 琴伴 - 智能钢琴陪练系统 Demo</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: #1a1a2e;
-    display: flex; justify-content: center; align-items: center;
-    min-height: 100vh;
-    overflow: hidden;
-  }
-  /* Phone frame */
-  .phone {
-    width: 390px; height: 844px;
-    background: #f5f3ff;
-    border-radius: 40px;
-    border: 8px solid #222;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .notch {
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    width: 160px; height: 30px; background: #222;
-    border-radius: 0 0 18px 18px; z-index: 100;
-  }
-  .screen { width: 100%; height: 100%; position: relative; overflow-y: auto; overflow-x: hidden; }
-  .page { display: none; width: 100%; min-height: 100%; }
-  .page.active { display: block; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --pri-1:#FF6B6B;--pri-2:#FF8E53;--pri-3:#FFA07A;
+  --grad:linear-gradient(135deg,#FF6B6B,#FF8E53);
+  --grad-soft:linear-gradient(135deg,#FFF0ED,#FFF5EE);
+  --bg:#FFF8F6;--card:#FFFFFF;
+  --text:#2D2D2D;--text-2:#6B7280;--text-3:#9CA3AF;
+  --success:#10B981;--warn:#F59E0B;--danger:#EF4444;--info:#3B82F6;--purple:#8B5CF6;
+  --radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.06);
+}
+html{font-size:16px}
+body{
+  font-family:'SF Pro Display',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:linear-gradient(160deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  display:flex;justify-content:center;align-items:center;
+  min-height:100vh;overflow:hidden;color:var(--text);
+}
 
-  /* === Status Bar === */
-  .status-bar {
-    height: 50px; padding: 14px 24px 0;
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 14px; font-weight: 600; color: #333;
-    position: relative; z-index: 50;
-  }
-  .status-bar.light { color: #fff; }
+.phone-frame{
+  width:390px;height:844px;
+  background:#111;border-radius:40px;
+  padding:8px;position:relative;
+  box-shadow:0 40px 80px rgba(0,0,0,0.5),inset 0 0 0 2px #333;
+}
+.phone-screen{
+  width:100%;height:100%;border-radius:34px;overflow:hidden;
+  position:relative;background:var(--bg);
+}
 
-  /* === Home Page === */
-  #home { background: #f5f3ff; }
-  .home-header {
-    padding: 0 24px; display: flex; justify-content: space-between; align-items: center;
-  }
-  .home-title { font-size: 20px; font-weight: 700; color: #1f2937; }
-  .home-actions { display: flex; gap: 8px; }
-  .icon-btn {
-    width: 40px; height: 40px; border-radius: 50%; border: none;
-    background: #ede7ff; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; font-size: 18px;
-    transition: all 0.2s;
-  }
-  .icon-btn:hover { background: #ddd6fe; transform: scale(1.05); }
-  .score-card {
-    margin: 20px 24px; padding: 20px;
-    background: linear-gradient(135deg, #ede7ff, #f6f1ff);
-    border-radius: 20px;
-  }
-  .score-label { font-size: 13px; color: #6b7280; }
-  .score-name { font-size: 20px; font-weight: 600; color: #1f2937; margin-top: 6px; }
-  .home-body { padding: 0 24px; display: flex; flex-direction: column; gap: 14px; }
-  .btn {
-    padding: 18px; border: none; border-radius: 16px;
-    font-size: 16px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    transition: all 0.2s;
-  }
-  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  .btn:active { transform: translateY(0); }
-  .btn-outline {
-    background: #ede7ff; color: #6d28d9;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
-    color: #fff; font-size: 20px; padding: 22px;
-  }
-  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  .home-hint {
-    text-align: center; color: #9ca3af; font-size: 14px;
-    line-height: 1.8; margin-top: auto; padding: 40px 24px;
-  }
+.status-bar{
+  height:44px;padding:8px 24px 0;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:14px;font-weight:600;position:relative;z-index:50;
+}
+.status-bar.light{color:#fff}
+.status-bar.dark{color:var(--text)}
+.status-icons{display:flex;gap:4px;align-items:center;font-size:12px}
 
-  /* === Practice Page === */
-  #practice { background: #000; }
-  .practice-overlay {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    z-index: 10;
-  }
-  .rec-badge {
-    position: absolute; top: 60px; left: 24px;
-    background: rgba(239,68,68,0.9); padding: 6px 14px;
-    border-radius: 20px; display: flex; align-items: center; gap: 6px;
-    color: #fff; font-size: 13px; font-weight: 700;
-  }
-  .rec-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #fff; animation: blink 1s infinite;
-  }
-  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .practice-center {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 20px;
-  }
-  .practice-hint {
-    color: rgba(255,255,255,0.7); font-size: 16px;
-    text-align: center; line-height: 1.6;
-  }
-  .stop-btn {
-    width: 90px; height: 90px; border-radius: 50%;
-    background: #fff; border: 6px solid #ef4444;
-    cursor: pointer; display: flex; align-items: center;
-    justify-content: center; transition: all 0.2s;
-  }
-  .stop-btn:hover { transform: scale(1.05); }
-  .stop-icon {
-    width: 32px; height: 32px; background: #ef4444; border-radius: 6px;
-  }
-  .timer { color: #fff; font-size: 48px; font-weight: 300; font-variant-numeric: tabular-nums; }
-  .video-preview {
-    width: 100%; height: 100%; object-fit: cover;
-  }
+.pages{width:100%;height:100%;position:relative}
+.page{
+  position:absolute;inset:0;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.4s ease,transform 0.4s ease;
+  transform:translateX(20px);
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+.page.active{opacity:1;pointer-events:auto;transform:translateX(0)}
+.page::-webkit-scrollbar{width:0}
 
-  /* === Loading Page === */
-  #loading { background: #000; }
-  .loading-center {
-    height: 100%; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 24px;
-  }
-  .loading-spinner {
-    width: 60px; height: 60px; border: 4px solid rgba(139,92,246,0.2);
-    border-top-color: #8b5cf6; border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { color: #fff; font-size: 18px; }
-  .loading-sub { color: rgba(255,255,255,0.5); font-size: 14px; }
+/* ===== HOME ===== */
+#page-home{background:var(--bg)}
+.home-header{
+  background:var(--grad);
+  padding:16px 24px 36px;
+  border-radius:0 0 32px 32px;
+  position:relative;overflow:hidden;
+}
+.home-header::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,255,255,0.1);
+}
+.home-header::after{
+  content:'';position:absolute;bottom:-20px;left:-20px;
+  width:100px;height:100px;border-radius:50%;
+  background:rgba(255,255,255,0.06);
+}
+.home-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2}
+.home-logo{display:flex;align-items:center;gap:10px}
+.home-logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(255,255,255,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+}
+.home-title{color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.5px}
+.home-actions{display:flex;gap:8px;position:relative;z-index:2}
+.icon-btn{
+  width:40px;height:40px;border-radius:14px;border:none;
+  background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:#fff;transition:all 0.2s;
+}
+.icon-btn:hover{background:rgba(255,255,255,0.25);transform:scale(1.05)}
+.home-greeting{margin-top:24px;position:relative;z-index:2}
+.home-greeting h2{color:#fff;font-size:22px;font-weight:700}
+.home-greeting p{color:rgba(255,255,255,0.75);font-size:14px;margin-top:6px}
 
-  /* === Feedback Page === */
-  #feedback { background: #f5f3ff; }
-  .feedback-header {
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
-    padding: 50px 24px 30px; text-align: center;
-    border-radius: 0 0 30px 30px;
-  }
-  .feedback-top {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .feedback-title { color: #fff; font-size: 18px; font-weight: 600; }
-  .back-btn {
-    background: none; border: none; color: #fff;
-    font-size: 24px; cursor: pointer; padding: 4px;
-  }
-  /* Avatar */
-  .avatar-wrap {
-    width: 120px; height: 120px; margin: 0 auto 16px;
-    position: relative;
-  }
-  .avatar-face {
-    width: 120px; height: 120px; border-radius: 50%;
-    background: #ffe0b2; position: relative;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  }
-  .avatar-hair {
-    position: absolute; top: -5px; left: 5px; right: 5px; height: 55px;
-    background: #6d4c41; border-radius: 60px 60px 0 0;
-  }
-  .avatar-eye {
-    position: absolute; width: 12px; height: 12px;
-    background: #3e2723; border-radius: 50%; top: 52px;
-  }
-  .avatar-eye.left { left: 30px; }
-  .avatar-eye.right { right: 30px; }
-  .avatar-eye::after {
-    content: ''; position: absolute; width: 4px; height: 4px;
-    background: #fff; border-radius: 50%; top: 2px; left: 2px;
-  }
-  .avatar-blush {
-    position: absolute; width: 18px; height: 12px;
-    background: rgba(255,171,145,0.5); border-radius: 50%; top: 62px;
-  }
-  .avatar-blush.left { left: 16px; }
-  .avatar-blush.right { right: 16px; }
-  .avatar-mouth {
-    position: absolute; width: 24px; height: 14px;
-    background: #d84315; border-radius: 50%;
-    bottom: 28px; left: 50%; transform: translateX(-50%);
-    transition: height 0.2s;
-  }
-  .avatar-mouth.speaking { animation: talk 0.4s infinite alternate; }
-  @keyframes talk {
-    0% { height: 8px; width: 20px; }
-    100% { height: 18px; width: 16px; }
-  }
-  .replay-btn {
-    background: rgba(255,255,255,0.15); border: none;
-    color: #fff; padding: 10px 20px; border-radius: 20px;
-    cursor: pointer; font-size: 14px;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .replay-btn:hover { background: rgba(255,255,255,0.25); }
+.home-body{padding:20px}
+.score-card{
+  background:var(--card);border-radius:20px;padding:20px;
+  box-shadow:var(--shadow);margin-bottom:16px;
+  display:flex;align-items:center;gap:16px;
+}
+.score-icon{
+  width:56px;height:56px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;flex-shrink:0;
+}
+.score-icon.empty{background:linear-gradient(135deg,#E5E7EB,#D1D5DB)}
+.score-icon.has{background:var(--grad)}
+.score-info{flex:1;min-width:0}
+.score-info .label{font-size:12px;color:var(--text-2);font-weight:500}
+.score-info .name{font-size:17px;font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.score-badge{
+  padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;
+  background:#DCFCE7;color:#16A34A;flex-shrink:0;
+}
 
-  .feedback-body { padding: 20px; }
-  /* Score Gauge */
-  .gauge-card {
-    background: #fff; border-radius: 20px; padding: 24px;
-    text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    margin-bottom: 16px;
-    animation: fadeUp 0.6s ease-out;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .gauge-ring {
-    width: 160px; height: 160px; margin: 0 auto 16px;
-    position: relative;
-  }
-  .gauge-ring svg { transform: rotate(-90deg); }
-  .gauge-bg { fill: none; stroke: #e5e7eb; stroke-width: 10; }
-  .gauge-fill {
-    fill: none; stroke-width: 10; stroke-linecap: round;
-    transition: stroke-dashoffset 1.5s ease-out;
-  }
-  .gauge-score {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-  }
-  .gauge-num { font-size: 48px; font-weight: 700; }
-  .gauge-label { font-size: 13px; color: #6b7280; }
-  .gauge-duration {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #f5f3ff; padding: 8px 16px; border-radius: 12px;
-    font-size: 13px; color: #6b7280;
-  }
+.btn{
+  width:100%;padding:18px;border:none;border-radius:var(--radius);
+  font-size:16px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.btn:active{transform:scale(0.98)}
+.btn-upload{
+  background:var(--card);color:var(--pri-1);
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.btn-upload:hover{box-shadow:0 6px 28px rgba(255,107,107,0.15)}
+.btn-primary{
+  background:var(--grad);color:#fff;font-size:18px;padding:22px;
+  box-shadow:0 8px 30px rgba(255,107,107,0.3);
+}
+.btn-primary:hover{box-shadow:0 10px 40px rgba(255,107,107,0.4);transform:translateY(-1px)}
 
-  /* Comment Card */
-  .comment-card {
-    background: linear-gradient(135deg, #fffbeb, #fff7ed);
-    border: 1px solid #fed7aa; border-radius: 16px;
-    padding: 20px; margin-bottom: 16px;
-    animation: fadeUp 0.6s ease-out 0.3s both;
-  }
-  .comment-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-  }
-  .comment-icon {
-    width: 32px; height: 32px; background: #fb923c;
-    border-radius: 8px; display: flex; align-items: center;
-    justify-content: center; color: #fff; font-size: 16px;
-  }
-  .comment-title { font-size: 16px; font-weight: 600; color: #92400e; }
-  .comment-text {
-    font-size: 15px; line-height: 1.8; color: #78350f;
-    min-height: 50px;
-  }
-  .comment-cursor {
-    display: inline-block; width: 2px; height: 16px;
-    background: #78350f; animation: cursorBlink 0.8s infinite;
-    vertical-align: text-bottom; margin-left: 2px;
-  }
-  @keyframes cursorBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+.tips-card{
+  background:var(--card);border-radius:20px;padding:20px;
+  box-shadow:var(--shadow);margin-top:16px;
+}
+.tips-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.tips-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:#FEF3C7;display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.tips-title{font-size:15px;font-weight:600}
+.tip-row{display:flex;align-items:center;gap:10px;padding:8px 0;color:var(--text-2);font-size:14px}
+.tip-row .dot{width:6px;height:6px;border-radius:50%;background:var(--pri-1);flex-shrink:0}
 
-  /* Radar / Metrics */
-  .metrics-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 12px; margin-bottom: 16px;
-    animation: fadeUp 0.6s ease-out 0.5s both;
-  }
-  .metric-card {
-    background: #fff; border-radius: 12px; padding: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  }
-  .metric-icon {
-    width: 36px; height: 36px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; margin-bottom: 10px;
-  }
-  .metric-label { font-size: 13px; color: #6b7280; font-weight: 500; }
-  .metric-score { font-size: 28px; font-weight: 700; margin-top: 4px; }
+/* ===== PRACTICE ===== */
+#page-practice{background:#111}
+.practice-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.7) 100%);
+}
+.practice-content{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:10;padding:24px;
+}
+.rec-badge{
+  position:absolute;top:12px;left:24px;
+  background:rgba(239,68,68,0.9);padding:6px 14px;
+  border-radius:20px;display:flex;align-items:center;gap:6px;
+  color:#fff;font-size:13px;font-weight:700;
+}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.practice-timer{
+  font-size:64px;font-weight:200;color:#fff;
+  font-variant-numeric:tabular-nums;letter-spacing:2px;margin-bottom:8px;
+}
+.practice-hint{color:rgba(255,255,255,0.6);font-size:15px;text-align:center;margin-bottom:40px}
+.stop-btn{
+  width:88px;height:88px;border-radius:50%;
+  background:#fff;border:5px solid var(--danger);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;box-shadow:0 0 30px rgba(239,68,68,0.3);
+}
+.stop-btn:hover{transform:scale(1.05)}
+.stop-btn:active{transform:scale(0.95)}
+.stop-inner{width:30px;height:30px;background:var(--danger);border-radius:6px}
+.practice-pulse{
+  position:absolute;width:88px;height:88px;border-radius:50%;
+  border:2px solid rgba(239,68,68,0.4);
+  animation:pulse 2s infinite;pointer-events:none;
+}
+@keyframes pulse{
+  0%{transform:scale(1);opacity:0.6}
+  100%{transform:scale(1.8);opacity:0}
+}
+/* Recording banner */
+.practice-banner{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0.9);
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  z-index:20;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.4s ease,transform 0.4s ease;
+}
+.practice-banner.show{
+  opacity:1;transform:translate(-50%,-50%) scale(1);
+}
+.banner-icon{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(239,68,68,0.9);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:#fff;
+  box-shadow:0 0 40px rgba(239,68,68,0.5);
+  animation:bannerPulse 1.5s ease-in-out infinite;
+}
+@keyframes bannerPulse{
+  0%,100%{box-shadow:0 0 30px rgba(239,68,68,0.4)}
+  50%{box-shadow:0 0 50px rgba(239,68,68,0.7)}
+}
+.banner-text{
+  color:#fff;font-size:20px;font-weight:600;
+  background:rgba(0,0,0,0.5);padding:8px 24px;border-radius:20px;
+  backdrop-filter:blur(8px);letter-spacing:1px;
+}
 
-  /* Issues */
-  .issues-card {
-    background: #fff; border-radius: 16px; padding: 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 16px;
-    animation: fadeUp 0.6s ease-out 0.7s both;
-  }
-  .issues-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-  }
-  .issues-icon {
-    width: 36px; height: 36px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
-  }
-  .issues-title { font-size: 16px; font-weight: 600; color: #1f2937; flex: 1; }
-  .issues-count {
-    padding: 4px 10px; border-radius: 12px;
-    font-size: 12px; font-weight: 600;
-  }
-  .issue-item {
-    background: #f9fafb; border: 1px solid #e5e7eb;
-    border-radius: 12px; padding: 12px; margin-bottom: 10px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .issue-measure {
-    width: 40px; height: 40px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 700;
-  }
-  .issue-info { flex: 1; }
-  .issue-subtitle { font-size: 14px; font-weight: 600; color: #1f2937; }
-  .issue-desc { font-size: 13px; color: #6b7280; margin-top: 2px; }
-  .issue-time {
-    padding: 4px 8px; background: #e5e7eb; border-radius: 6px;
-    font-size: 11px; font-weight: 600; color: #6b7280;
-  }
+/* ===== LOADING ===== */
+#page-loading{background:#111}
+.loading-content{
+  height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;
+}
+.loading-ring{width:72px;height:72px;position:relative}
+.loading-ring::before{
+  content:'';position:absolute;inset:0;
+  border:3px solid rgba(255,107,107,0.15);border-radius:50%;
+}
+.loading-ring::after{
+  content:'';position:absolute;inset:0;
+  border:3px solid transparent;border-top-color:var(--pri-1);
+  border-radius:50%;animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:#fff;font-size:20px;font-weight:600}
+.loading-sub{color:rgba(255,255,255,0.4);font-size:14px;margin-top:-16px}
+.loading-steps{display:flex;gap:24px;margin-top:8px}
+.loading-step{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  opacity:0.3;transition:opacity 0.5s;
+}
+.loading-step.active{opacity:1}
+.loading-step .step-dot{width:10px;height:10px;border-radius:50%;background:var(--pri-1)}
+.loading-step .step-label{color:rgba(255,255,255,0.7);font-size:12px}
 
-  /* Reports Page */
-  #reports { background: #f5f3ff; }
-  .reports-list { padding: 16px; }
-  .report-item {
-    background: #fff; border-radius: 12px; padding: 16px;
-    margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  }
-  .report-score-badge {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: #ede7ff; display: flex; align-items: center;
-    justify-content: center; font-size: 18px; font-weight: 700;
-    color: #6d28d9;
-  }
-  .report-info { flex: 1; }
-  .report-comment {
-    font-size: 14px; color: #374151;
-    display: -webkit-box; -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .report-date { font-size: 12px; color: #9ca3af; margin-top: 4px; }
-  .empty-state { text-align: center; padding: 80px 24px; color: #9ca3af; }
+/* ===== FEEDBACK ===== */
+#page-feedback{background:var(--bg)}
+.feedback-header{
+  background:var(--grad);padding:16px 24px 32px;
+  border-radius:0 0 32px 32px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.feedback-header::before{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:120px;height:120px;border-radius:50%;
+  background:rgba(255,255,255,0.08);
+}
+.feedback-top{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;position:relative;z-index:2;
+}
+.back-btn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:6px}
+.feedback-title{color:#fff;font-size:18px;font-weight:600}
 
-  /* Settings Page */
-  #settings { background: #f5f3ff; }
-  .settings-body { padding: 16px; }
-  .settings-section {
-    font-size: 14px; font-weight: 600; color: #6d28d9;
-    margin: 20px 0 10px; padding-left: 4px;
-  }
-  .settings-section:first-child { margin-top: 8px; }
-  .settings-field { margin-bottom: 12px; }
-  .settings-field label {
-    display: block; font-size: 13px; color: #6b7280;
-    margin-bottom: 4px; font-weight: 500;
-  }
-  .settings-field input, .settings-field textarea {
-    width: 100%; padding: 12px; border: 1px solid #d1d5db;
-    border-radius: 10px; font-size: 14px; font-family: inherit;
-    background: #fff;
-  }
-  .settings-field input:focus, .settings-field textarea:focus {
-    outline: none; border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
-  }
-  .preset-chips {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
-  }
-  .preset-chip {
-    padding: 6px 14px; border-radius: 20px;
-    background: #ede7ff; border: 1px solid #ddd6fe;
-    font-size: 13px; color: #6d28d9; cursor: pointer;
-    transition: all 0.2s;
-  }
-  .preset-chip:hover { background: #ddd6fe; }
-  .save-btn {
-    width: 100%; padding: 16px; margin-top: 24px;
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
-    color: #fff; border: none; border-radius: 14px;
-    font-size: 16px; font-weight: 600; cursor: pointer;
-  }
-  .save-btn:hover { opacity: 0.9; }
+.avatar-container{width:110px;height:110px;margin:0 auto 16px;position:relative}
+.avatar-glow{
+  position:absolute;inset:-8px;border-radius:50%;
+  background:rgba(255,255,255,0.15);filter:blur(12px);
+}
+.avatar{
+  width:110px;height:110px;border-radius:50%;
+  background:transparent;position:relative;
+  box-shadow:0 8px 30px rgba(0,0,0,0.15);overflow:hidden;
+}
+.avatar-img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.replay-btn{
+  background:rgba(255,255,255,0.15);border:none;
+  color:#fff;padding:10px 22px;border-radius:22px;
+  cursor:pointer;font-size:14px;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all 0.2s;position:relative;z-index:2;
+}
+.replay-btn:hover{background:rgba(255,255,255,0.25)}
 
-  /* Toast */
-  .toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    background: #1f2937; color: #fff; padding: 12px 24px;
-    border-radius: 12px; font-size: 14px; z-index: 200;
-    animation: toastIn 0.3s ease-out;
-    white-space: nowrap;
-  }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-  }
+.feedback-body{padding:20px}
 
-  /* File input hidden */
-  .hidden { display: none; }
+.gauge-card{
+  background:var(--card);border-radius:24px;padding:28px;
+  text-align:center;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.gauge-wrap{width:170px;height:170px;margin:0 auto 16px;position:relative}
+.gauge-svg{transform:rotate(-90deg)}
+.gauge-bg{fill:none;stroke:#F3F4F6;stroke-width:10}
+.gauge-fill{
+  fill:none;stroke-width:10;stroke-linecap:round;
+  transition:stroke-dashoffset 1.8s cubic-bezier(0.4,0,0.2,1);
+}
+.gauge-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.gauge-num{font-size:52px;font-weight:800;line-height:1}
+.gauge-label{font-size:13px;color:var(--text-2);font-weight:500;margin-top:4px}
+.gauge-duration{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#FFF0ED;padding:8px 16px;border-radius:12px;
+  font-size:13px;color:var(--text-2);
+}
 
-  /* Scrollbar */
-  .screen::-webkit-scrollbar { width: 0; }
+.comment-card{
+  background:linear-gradient(135deg,#FFFBEB,#FFF7ED);
+  border:1px solid #FED7AA;border-radius:18px;
+  padding:20px;margin-bottom:16px;
+}
+.comment-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.comment-icon{
+  width:34px;height:34px;background:var(--pri-2);
+  border-radius:10px;display:flex;align-items:center;
+  justify-content:center;color:#fff;font-size:16px;font-weight:700;
+}
+.comment-title{font-size:16px;font-weight:600;color:#92400E}
+.comment-text{font-size:15px;line-height:1.9;color:#78350F;min-height:40px}
+.cursor-blink{
+  display:inline-block;width:2px;height:16px;
+  background:#78350F;animation:cblink 0.7s infinite;
+  vertical-align:text-bottom;margin-left:1px;
+}
+@keyframes cblink{0%,100%{opacity:1}50%{opacity:0}}
+
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.metric-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.metric-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:12px;
+}
+.metric-label{font-size:13px;color:var(--text-2);font-weight:500}
+.metric-val{font-size:30px;font-weight:800;margin-top:4px}
+
+.issues-card{background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.issues-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.issues-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.issues-title{font-size:16px;font-weight:600;flex:1}
+.issues-count{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600}
+.issue-item{
+  background:#F9FAFB;border:1px solid #F3F4F6;
+  border-radius:14px;padding:12px;margin-bottom:10px;
+  display:flex;align-items:center;gap:12px;
+}
+.issue-measure{
+  width:42px;height:42px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;flex-shrink:0;
+}
+.issue-info{flex:1;min-width:0}
+.issue-subtitle{font-size:14px;font-weight:600}
+.issue-desc{font-size:13px;color:var(--text-2);margin-top:2px}
+.issue-time{
+  padding:4px 8px;background:#E5E7EB;border-radius:6px;
+  font-size:11px;font-weight:600;color:var(--text-2);flex-shrink:0;
+}
+
+/* ===== REPORTS ===== */
+#page-reports{background:var(--bg)}
+.reports-list{padding:16px}
+.report-item{
+  background:var(--card);border-radius:var(--radius);padding:16px;
+  margin-bottom:10px;display:flex;align-items:center;gap:14px;
+  box-shadow:var(--shadow);
+}
+.report-badge{
+  width:50px;height:50px;border-radius:50%;
+  background:#FFF0ED;display:flex;align-items:center;
+  justify-content:center;font-size:18px;font-weight:700;
+  color:var(--pri-1);flex-shrink:0;
+}
+.report-info{flex:1;min-width:0}
+.report-comment{
+  font-size:14px;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;
+}
+.report-date{font-size:12px;color:var(--text-3);margin-top:4px}
+.empty-state{text-align:center;padding:80px 24px;color:var(--text-3)}
+
+/* ===== SETTINGS ===== */
+#page-settings{background:var(--bg)}
+.settings-body{padding:16px}
+.settings-section{
+  font-size:13px;font-weight:600;color:var(--pri-1);
+  margin:20px 0 10px;padding-left:4px;text-transform:uppercase;letter-spacing:0.5px;
+}
+.settings-section:first-child{margin-top:4px}
+.settings-field{margin-bottom:12px}
+.settings-field label{display:block;font-size:13px;color:var(--text-2);margin-bottom:4px;font-weight:500}
+.settings-field input,.settings-field textarea{
+  width:100%;padding:12px 14px;border:1.5px solid #E5E7EB;
+  border-radius:12px;font-size:14px;font-family:inherit;
+  background:var(--card);transition:all 0.2s;
+}
+.settings-field input:focus,.settings-field textarea:focus{
+  outline:none;border-color:var(--pri-1);
+  box-shadow:0 0 0 3px rgba(255,107,107,0.1);
+}
+.preset-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.preset-chip{
+  padding:6px 14px;border-radius:20px;
+  background:#FFF0ED;border:1px solid #FFDDD5;
+  font-size:13px;color:var(--pri-1);cursor:pointer;
+  transition:all 0.2s;font-weight:500;
+}
+.preset-chip:hover{background:#FFDDD5}
+.save-btn{
+  width:100%;padding:16px;margin-top:20px;
+  background:var(--grad);color:#fff;border:none;
+  border-radius:var(--radius);font-size:16px;
+  font-weight:600;cursor:pointer;transition:all 0.2s;
+}
+.save-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.save-btn.secondary{background:#374151;margin-top:10px}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+  background:#2D2D2D;color:#fff;padding:12px 24px;
+  border-radius:14px;font-size:14px;z-index:300;
+  animation:toastIn 0.3s ease-out;white-space:nowrap;
+  box-shadow:0 8px 30px rgba(0,0,0,0.3);
+}
+@keyframes toastIn{
+  from{opacity:0;transform:translateX(-50%) translateY(10px)}
+  to{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+
+.demo-controls{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;gap:12px;z-index:100;
+}
+.demo-btn{
+  padding:10px 24px;border-radius:12px;border:none;
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:all 0.2s;box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+.demo-btn.play{background:var(--grad);color:#fff}
+.demo-btn.play:hover{box-shadow:0 6px 30px rgba(255,107,107,0.4)}
+.demo-btn.reset{background:rgba(255,255,255,0.1);color:#fff;backdrop-filter:blur(10px)}
+.demo-btn.reset:hover{background:rgba(255,255,255,0.2)}
+.demo-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+.demo-label{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,0.4);font-size:13px;font-weight:500;
+  letter-spacing:1px;text-transform:uppercase;z-index:100;
+}
+
+.fade-up{
+  opacity:0;transform:translateY(24px);
+  transition:opacity 0.6s ease-out,transform 0.6s ease-out;
+}
+.fade-up.show{opacity:1;transform:translateY(0)}
+
+.hidden{display:none}
 </style>
 </head>
 <body>
 
-<div class="phone">
-  <div class="notch"></div>
-  <div class="screen" id="screenContainer">
+<div class="demo-label">AI 琴伴 - Interactive Demo</div>
 
-    <!-- ========== HOME ========== -->
-    <div class="page active" id="home">
-      <div class="status-bar">
-        <span>9:41</span>
-        <div class="home-actions">
-          <button class="icon-btn" onclick="showPage('reports')" title="历史报告">📊</button>
-          <button class="icon-btn" onclick="showPage('settings')" title="设置">⚙️</button>
-        </div>
-      </div>
-      <div class="home-header">
+<div class="phone-frame">
+<div class="phone-screen">
+<div class="pages">
+
+<!-- ===== HOME ===== -->
+<div class="page active" id="page-home">
+  <div class="home-header">
+    <div class="home-top">
+      <div class="home-logo">
+        <div class="home-logo-icon"><img src="icons/logo.png" width="24" height="24" style="display:block"></div>
         <div class="home-title">AI 琴伴</div>
       </div>
-      <div class="score-card">
-        <div class="score-label">当前曲谱</div>
-        <div class="score-name" id="scoreName">尚未上传</div>
-      </div>
-      <div class="home-body">
-        <button class="btn btn-outline" id="uploadScoreBtn" onclick="document.getElementById('scoreInput').click()">
-          📄 <span id="uploadScoreText">上传曲谱</span>
-        </button>
-        <input type="file" id="scoreInput" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="uploadScore(this)">
-        <button class="btn btn-primary" onclick="startPractice()">
-          ▶️ 开始练习
-        </button>
-      </div>
-      <div class="home-hint">
-        把手机后置摄像头对准琴键<br>开始你的沉浸式练习吧 ♪
+      <div class="home-actions">
+        <button class="icon-btn" onclick="go('reports')" title="历史报告"><img src="icons/report.png" width="20" height="20" style="display:block"></button>
+        <button class="icon-btn" onclick="go('settings')" title="设置"><img src="icons/settings.png" width="20" height="20" style="display:block"></button>
       </div>
     </div>
-
-    <!-- ========== PRACTICE ========== -->
-    <div class="page" id="practice">
-      <video id="videoPreview" class="video-preview" muted loop playsinline></video>
-      <div class="practice-overlay">
-        <div class="rec-badge"><div class="rec-dot"></div> REC</div>
-        <div class="practice-center">
-          <div class="practice-hint" id="practiceHint">
-            选择一个练琴视频<br>模拟录制过程
-          </div>
-          <div class="timer" id="practiceTimer">00:00</div>
-          <button class="stop-btn" id="stopBtn" onclick="stopPractice()">
-            <div class="stop-icon"></div>
-          </button>
-          <button class="btn btn-outline" style="color:#fff;background:rgba(255,255,255,0.15);margin-top:10px"
-                  onclick="document.getElementById('videoInput').click()">
-            📁 选择视频文件
-          </button>
-          <input type="file" id="videoInput" class="hidden" accept=".mp4,.mov,.m4v,.webm" onchange="selectVideo(this)">
-        </div>
+    <div class="home-greeting">
+      <h2>今天也要加油练琴哦</h2>
+      <p>让 AI 老师陪你一起进步 ♪</p>
+    </div>
+  </div>
+  <div class="home-body">
+    <div class="score-card" id="scoreCard">
+      <div class="score-icon empty" id="scoreIcon"><img src="icons/note.png" width="28" height="28" style="display:block"></div>
+      <div class="score-info">
+        <div class="label">当前曲谱</div>
+        <div class="name" id="scoreName">尚未上传</div>
       </div>
     </div>
-
-    <!-- ========== LOADING ========== -->
-    <div class="page" id="loading">
-      <div class="loading-center">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">AI 老师正在思考…</div>
-        <div class="loading-sub" id="loadingSub">正在分析手型与音频</div>
+    <button class="btn btn-upload" id="uploadBtn" onclick="simulateUpload()">
+      <img src="icons/upload.png" width="18" height="18" style="vertical-align:middle"> <span id="uploadLabel">上传曲谱</span>
+    </button>
+    <input type="file" id="scoreFileInput" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="handleScoreFile(this)">
+    <button class="btn btn-primary" onclick="startPractice()">
+      <img src="icons/play.png" width="20" height="20" style="vertical-align:middle"> 开始练习
+    </button>
+    <div class="tips-card">
+      <div class="tips-header">
+        <div class="tips-icon">💡</div>
+        <div class="tips-title">小贴士</div>
       </div>
+      <div class="tip-row"><div class="dot"></div>把手机后置摄像头对准琴键</div>
+      <div class="tip-row"><div class="dot"></div>保持充足的光线，能看清你的手型</div>
+      <div class="tip-row"><div class="dot"></div>弹奏完整首曲子后再停止录制</div>
     </div>
-
-    <!-- ========== FEEDBACK ========== -->
-    <div class="page" id="feedback">
-      <div class="feedback-header">
-        <div class="feedback-top">
-          <button class="back-btn" onclick="showPage('home')">←</button>
-          <div class="feedback-title">练习反馈</div>
-          <button class="back-btn" style="visibility:hidden">←</button>
-        </div>
-        <div class="avatar-wrap">
-          <div class="avatar-face">
-            <div class="avatar-hair"></div>
-            <div class="avatar-eye left"></div>
-            <div class="avatar-eye right"></div>
-            <div class="avatar-blush left"></div>
-            <div class="avatar-blush right"></div>
-            <div class="avatar-mouth" id="avatarMouth"></div>
-          </div>
-        </div>
-        <button class="replay-btn" onclick="replayAudio()">🔊 再听一遍</button>
-      </div>
-      <div class="feedback-body" id="feedbackBody">
-        <!-- Dynamically filled -->
-      </div>
-    </div>
-
-    <!-- ========== REPORTS ========== -->
-    <div class="page" id="reports">
-      <div class="status-bar">
-        <button class="back-btn" style="color:#333" onclick="showPage('home')">←</button>
-        <span style="font-weight:600;color:#1f2937">历史报告</span>
-        <span style="width:40px"></span>
-      </div>
-      <div class="reports-list" id="reportsList">
-        <div class="empty-state">还没有练习记录哦</div>
-      </div>
-    </div>
-
-    <!-- ========== SETTINGS ========== -->
-    <div class="page" id="settings">
-      <div class="status-bar">
-        <button class="back-btn" style="color:#333" onclick="showPage('home')">←</button>
-        <span style="font-weight:600;color:#1f2937">设置</span>
-        <button class="icon-btn" onclick="loadSettings()" style="font-size:14px">🔄</button>
-      </div>
-      <div class="settings-body">
-        <div class="settings-section">后端服务</div>
-        <div class="settings-field">
-          <label>后端 Base URL</label>
-          <input id="setBaseUrl" value="http://localhost:8000">
-        </div>
-
-        <div class="settings-section">LLM 服务（自定义模型 API）</div>
-        <div class="preset-chips">
-          <span class="preset-chip" onclick="applyPreset('deepseek')">DeepSeek</span>
-          <span class="preset-chip" onclick="applyPreset('qwen')">通义千问</span>
-          <span class="preset-chip" onclick="applyPreset('glm')">智谱 GLM</span>
-          <span class="preset-chip" onclick="applyPreset('kimi')">Moonshot</span>
-          <span class="preset-chip" onclick="applyPreset('ollama')">本地 Ollama</span>
-        </div>
-        <div class="settings-field">
-          <label>LLM Base URL</label>
-          <input id="setLlmUrl" value="https://api.deepseek.com/v1">
-        </div>
-        <div class="settings-field">
-          <label>API Key</label>
-          <input id="setApiKey" type="password" placeholder="请输入（留空不修改）">
-        </div>
-        <div class="settings-field">
-          <label>Model 名称</label>
-          <input id="setModel" value="deepseek-chat">
-        </div>
-
-        <div class="settings-section">TTS 语音</div>
-        <div class="settings-field">
-          <label>引擎</label>
-          <input id="setTtsEngine" value="edge-tts">
-        </div>
-        <div class="settings-field">
-          <label>Voice</label>
-          <input id="setTtsVoice" value="zh-CN-XiaoxiaoNeural">
-        </div>
-
-        <button class="save-btn" onclick="saveSettings()">保存全部</button>
-        <button class="save-btn" style="background:#374151;margin-top:10px" onclick="testLLM()">测试 LLM 连通性</button>
-      </div>
-    </div>
-
   </div>
 </div>
 
-<script>
-// ===== State =====
-let baseUrl = localStorage.getItem('baseUrl') || 'http://localhost:8000';
-let scoreId = null;
-let selectedVideo = null;
-let timerInterval = null;
-let timerSeconds = 0;
-let currentAudioUrl = null;
-let currentAudio = null;
+<!-- ===== PRACTICE ===== -->
+<div class="page" id="page-practice">
+  <div class="practice-bg"></div>
+  <div class="practice-banner" id="recBanner">
+    <div class="banner-icon">⏺</div>
+    <div class="banner-text">开始录制</div>
+  </div>
+  <div class="practice-content">
+    <div class="rec-badge"><div class="rec-dot"></div>REC</div>
+    <div class="practice-timer" id="practiceTimer">00:00</div>
+    <div class="practice-hint">沉浸式练琴中...<br>弹完后点击下方停止</div>
+    <div style="position:relative;display:flex;align-items:center;justify-content:center">
+      <div class="practice-pulse"></div>
+      <button class="stop-btn" onclick="stopPractice()">
+        <div class="stop-inner"></div>
+      </button>
+    </div>
+  </div>
+</div>
 
-// ===== Navigation =====
-function showPage(id) {
+<!-- ===== LOADING ===== -->
+<div class="page" id="page-loading">
+  <div class="loading-content">
+    <div class="loading-ring"></div>
+    <div class="loading-text">AI 老师正在思考…</div>
+    <div class="loading-sub" id="loadingSub">正在分析手型与音频</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="step1"><div class="step-dot"></div><div class="step-label">手型</div></div>
+      <div class="loading-step" id="step2"><div class="step-dot"></div><div class="step-label">音频</div></div>
+      <div class="loading-step" id="step3"><div class="step-dot"></div><div class="step-label">评语</div></div>
+      <div class="loading-step" id="step4"><div class="step-dot"></div><div class="step-label">语音</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FEEDBACK ===== -->
+<div class="page" id="page-feedback">
+  <div class="feedback-header">
+    <div class="feedback-top">
+      <button class="back-btn" onclick="go('home')">←</button>
+      <div class="feedback-title">练习反馈</div>
+      <button class="back-btn" style="visibility:hidden">←</button>
+    </div>
+    <div class="avatar-container">
+      <div class="avatar-glow"></div>
+      <div class="avatar">
+        <img class="avatar-img" src="icons/ePerson.png" alt="AI 老师">
+      </div>
+    </div>
+    <button class="replay-btn"><img src="icons/speaker.png" width="16" height="16" style="vertical-align:middle"> 再听一遍</button>
+  </div>
+  <div class="feedback-body" id="feedbackBody"></div>
+</div>
+
+<!-- ===== REPORTS ===== -->
+<div class="page" id="page-reports">
+  <div class="status-bar dark">
+    <button class="back-btn" style="color:var(--text)" onclick="go('home')">←</button>
+    <span style="font-weight:600">历史报告</span>
+    <span style="width:36px"></span>
+  </div>
+  <div class="reports-list" id="reportsList"></div>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div class="page" id="page-settings">
+  <div class="status-bar dark">
+    <button class="back-btn" style="color:var(--text)" onclick="go('home')">←</button>
+    <span style="font-weight:600">设置</span>
+    <span style="width:36px"></span>
+  </div>
+  <div class="settings-body">
+    <div class="settings-section">后端服务</div>
+    <div class="settings-field">
+      <label>后端 Base URL</label>
+      <input id="setBaseUrl" value="http://localhost:8000">
+    </div>
+    <div class="settings-section">LLM 服务</div>
+    <div class="preset-chips">
+      <span class="preset-chip" onclick="applyPreset('deepseek')">DeepSeek</span>
+      <span class="preset-chip" onclick="applyPreset('qwen')">通义千问</span>
+      <span class="preset-chip" onclick="applyPreset('glm')">智谱 GLM</span>
+      <span class="preset-chip" onclick="applyPreset('kimi')">Moonshot</span>
+      <span class="preset-chip" onclick="applyPreset('ollama')">本地 Ollama</span>
+    </div>
+    <div class="settings-field"><label>LLM Base URL</label><input id="setLlmUrl" value="https://api.deepseek.com/v1"></div>
+    <div class="settings-field"><label>API Key</label><input id="setApiKey" type="password" placeholder="sk-..."></div>
+    <div class="settings-field"><label>Model</label><input id="setModel" value="deepseek-chat"></div>
+    <div class="settings-section">TTS 语音</div>
+    <div class="settings-field"><label>引擎</label><input id="setTtsEngine" value="edge-tts"></div>
+    <div class="settings-field"><label>Voice</label><input id="setTtsVoice" value="zh-CN-XiaoxiaoNeural"></div>
+    <button class="save-btn" onclick="toast('已保存，新配置立即生效 ✓')">保存全部</button>
+    <button class="save-btn secondary" onclick="toast('LLM 连通成功 ✓')">测试 LLM 连通性</button>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="demo-controls">
+  <button class="demo-btn play" id="autoPlayBtn" onclick="autoPlay()">▶ 自动演示</button>
+  <button class="demo-btn reset" onclick="resetDemo()"><img src="icons/reset.png" width="16" height="16" style="vertical-align:middle"> 重置</button>
+</div>
+
+<script>
+let currentPage = 'home';
+let timerInterval = null;
+let timerSec = 0;
+let autoPlaying = false;
+let autoTimer = null;
+let scoreUploaded = false;
+
+function go(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('screenContainer').scrollTop = 0;
-  if (id === 'reports') loadReports();
-  if (id === 'settings') loadSettings();
+  document.getElementById('page-' + id).classList.add('active');
+  currentPage = id;
+  document.querySelector('.pages').scrollTop = 0;
+  if (id === 'reports') renderReports();
 }
 
 function toast(msg) {
@@ -588,358 +650,287 @@ function toast(msg) {
   setTimeout(() => t.remove(), 2500);
 }
 
-// ===== Upload Score =====
-async function uploadScore(input) {
-  const file = input.files[0];
-  if (!file) return;
-  document.getElementById('uploadScoreText').textContent = '上传中…';
-  try {
-    const form = new FormData();
-    form.append('file', file);
-    form.append('title', file.name);
-    const res = await fetch(`${baseUrl}/api/upload_score`, { method: 'POST', body: form });
-    const data = await res.json();
-    scoreId = data.score_id;
-    document.getElementById('scoreName').textContent = file.name;
-    toast('曲谱解析成功 ✓');
-  } catch (e) {
-    toast('上传失败: ' + e.message);
-  } finally {
-    document.getElementById('uploadScoreText').textContent = '上传曲谱';
-    input.value = '';
-  }
+function simulateUpload() {
+  if (autoPlaying) { doUpload('小星星变奏曲.pdf'); }
+  else { document.getElementById('scoreFileInput').click(); }
 }
-
-// ===== Practice =====
-function startPractice() {
-  showPage('practice');
-  timerSeconds = 0;
-  document.getElementById('practiceTimer').textContent = '00:00';
-  document.getElementById('practiceHint').style.display = 'block';
-  timerInterval = setInterval(() => {
-    timerSeconds++;
-    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-    const s = String(timerSeconds % 60).padStart(2, '0');
-    document.getElementById('practiceTimer').textContent = `${m}:${s}`;
-  }, 1000);
-}
-
-function selectVideo(input) {
-  const file = input.files[0];
-  if (!file) return;
-  selectedVideo = file;
-  document.getElementById('practiceHint').textContent = `已选择: ${file.name}`;
-  // Preview the video
-  const url = URL.createObjectURL(file);
-  const video = document.getElementById('videoPreview');
-  video.src = url;
-  video.muted = true;
-  video.play().catch(() => {});
-  toast('视频已选择，点击停止按钮提交');
+function handleScoreFile(input) {
+  if (input.files[0]) doUpload(input.files[0].name);
   input.value = '';
 }
-
-async function stopPractice() {
-  clearInterval(timerInterval);
-
-  // If no video selected, create a dummy blob for demo
-  if (!selectedVideo) {
-    toast('未选择视频，使用模拟数据演示');
-    // Create a small dummy file
-    selectedVideo = new File([new Blob(['dummy'], { type: 'video/mp4' })], 'demo.mp4', { type: 'video/mp4' });
-  }
-
-  showPage('loading');
-  document.getElementById('loadingSub').textContent = '正在分析手型与音频…';
-
-  try {
-    const form = new FormData();
-    form.append('file', selectedVideo);
-    if (scoreId) form.append('score_id', scoreId);
-
-    const res = await fetch(`${baseUrl}/api/evaluate`, { method: 'POST', body: form });
-    const data = await res.json();
-
-    if (data.status === 'success') {
-      showFeedback(data);
-    } else {
-      toast('评估失败');
-      showPage('home');
+function doUpload(name) {
+  document.getElementById('uploadLabel').textContent = '解析中…';
+  setTimeout(() => {
+    scoreUploaded = true;
+    document.getElementById('scoreName').textContent = name;
+    document.getElementById('scoreIcon').className = 'score-icon has';
+    document.getElementById('scoreIcon').innerHTML = '<img src="icons/note.png" width="28" height="28" style="display:block">';
+    document.getElementById('uploadLabel').textContent = '上传曲谱';
+    const card = document.getElementById('scoreCard');
+    if (!card.querySelector('.score-badge')) {
+      const b = document.createElement('div');
+      b.className = 'score-badge'; b.textContent = '已解析'; card.appendChild(b);
     }
-  } catch (e) {
-    toast('请求失败: ' + e.message);
-    showPage('home');
-  }
-  selectedVideo = null;
+    toast('曲谱解析成功 ✓');
+  }, 800);
 }
 
-// ===== Feedback =====
-function showFeedback(data) {
-  const r = data.report;
-  currentAudioUrl = data.audio_url;
+function startPractice() {
+  if (autoPlaying) { clearTimeout(autoTimer); autoPlaying = false; }
+  go('practice');
+  timerSec = 0; updateTimer();
+  const banner = document.getElementById('recBanner');
+  banner.classList.add('show');
+  banner.onclick = () => { banner.classList.remove('show'); };
+  setTimeout(() => { banner.classList.remove('show'); }, 1500);
+  startTimer();
+}
+function startTimer() {
+  timerInterval = setInterval(() => { timerSec++; updateTimer(); }, 1000);
+}
+function updateTimer() {
+  const m = String(Math.floor(timerSec / 60)).padStart(2, '0');
+  const s = String(timerSec % 60).padStart(2, '0');
+  document.getElementById('practiceTimer').textContent = m + ':' + s;
+}
+function stopPractice() {
+  clearInterval(timerInterval); go('loading'); animateLoading();
+}
 
-  // Build feedback HTML
-  const scoreColor = r.overall_score >= 90 ? '#10b981' : r.overall_score >= 75 ? '#f59e0b' : '#ef4444';
-  const circumference = 2 * Math.PI * 68;
-  const offset = circumference * (1 - r.overall_score / 100);
+function animateLoading() {
+  const steps = ['step1','step2','step3','step4'];
+  const labels = ['分析手型中…','比对音频中…','生成评语中…','合成语音中…'];
+  let i = 0;
+  const sub = document.getElementById('loadingSub');
+  steps.forEach(s => document.getElementById(s).classList.remove('active'));
+  function next() {
+    if (i > 0) document.getElementById(steps[i-1]).classList.add('active');
+    if (i < steps.length) {
+      sub.textContent = labels[i];
+      document.getElementById(steps[i]).classList.add('active');
+      i++; setTimeout(next, 700);
+    } else { setTimeout(() => showFeedback(), 300); }
+  }
+  setTimeout(next, 300);
+}
+
+const DEMO_REPORT = {
+  overall: 85, rhythm: 88, accuracy: 82, fluency: 90, handHealth: 78, duration: 127,
+  comment: '宝贝弹得很完整，老师能感觉到你认真练习了！第2小节有一个小错音，还有第5小节手指有点塌陷，记得让手指像小桥一样撑起来哦，继续加油！',
+  handIssues: [
+    { measure: 5, desc: '右手食指折指', time: 23.4 },
+    { measure: 8, desc: '左手掌关节塌陷', time: 41.2 },
+    { measure: 12, desc: '右手拇指过度弯曲', time: 58.7 },
+  ],
+  audioIssues: [
+    { measure: 2, type: 'wrong', expected: 'E4', actual: 'D4', time: 8.5 },
+    { measure: 7, type: 'missing', expected: 'C5', time: 35.1 },
+  ],
+};
+
+function showFeedback() {
+  const r = DEMO_REPORT;
+  const color = r.overall >= 90 ? 'var(--success)' : r.overall >= 75 ? 'var(--warn)' : 'var(--danger)';
+  const circ = 2 * Math.PI * 72;
+  const offset = circ * (1 - r.overall / 100);
 
   let html = `
-    <div class="gauge-card">
-      <div class="gauge-ring">
-        <svg width="160" height="160" viewBox="0 0 160 160">
-          <circle class="gauge-bg" cx="80" cy="80" r="68"/>
-          <circle class="gauge-fill" cx="80" cy="80" r="68"
-            stroke="${scoreColor}"
-            stroke-dasharray="${circumference}"
-            stroke-dashoffset="${circumference}"
-            id="gaugeCircle"/>
+    <div class="gauge-card fade-up" id="anim-gauge">
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" width="170" height="170" viewBox="0 0 170 170">
+          <circle class="gauge-bg" cx="85" cy="85" r="72"/>
+          <circle class="gauge-fill" cx="85" cy="85" r="72" stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" id="gaugeFill"/>
         </svg>
-        <div class="gauge-score">
-          <div class="gauge-num" id="scoreNum" style="color:${scoreColor}">0</div>
+        <div class="gauge-center">
+          <div class="gauge-num" id="gaugeNum" style="color:${color}">0</div>
           <div class="gauge-label">综合评分</div>
         </div>
       </div>
-      <div class="gauge-duration">⏱ 练习时长 ${Math.round(r.duration_seconds)} 秒</div>
+      <div class="gauge-duration"><img src="icons/clock.png" width="14" height="14" style="vertical-align:middle"> 练习时长 ${r.duration} 秒</div>
     </div>
-
-    <div class="comment-card">
+    <div class="comment-card fade-up" id="anim-comment">
       <div class="comment-header">
-        <div class="comment-icon">❝</div>
+        <div class="comment-icon"><img src="icons/quote.png" width="18" height="18" style="display:block"></div>
         <div class="comment-title">老师的话</div>
       </div>
       <div class="comment-text" id="commentText"></div>
     </div>
-
-    <div class="metrics-grid">
+    <div class="metrics-grid fade-up" id="anim-metrics">
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6">📊</div>
+        <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:var(--info)"><img src="icons/rhythm.png" width="16" height="16" style="vertical-align:middle"></div>
         <div class="metric-label">节奏稳定</div>
-        <div class="metric-score" style="color:#3b82f6">${r.rhythm_score}</div>
+        <div class="metric-val" style="color:var(--info)">${r.rhythm}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:#10b981">🎵</div>
+        <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:var(--success)"><img src="icons/note.png" width="16" height="16" style="vertical-align:middle"></div>
         <div class="metric-label">音准准确</div>
-        <div class="metric-score" style="color:#10b981">${r.accuracy_score}</div>
+        <div class="metric-val" style="color:var(--success)">${r.accuracy}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b">🌊</div>
+        <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:var(--warn)"><img src="icons/flow.png" width="16" height="16" style="vertical-align:middle"></div>
         <div class="metric-label">流畅度</div>
-        <div class="metric-score" style="color:#f59e0b">${r.fluency_score}</div>
+        <div class="metric-val" style="color:var(--warn)">${r.fluency}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6">✋</div>
+        <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)"><img src="icons/hand.png" width="16" height="16" style="vertical-align:middle"></div>
         <div class="metric-label">手型健康</div>
-        <div class="metric-score" style="color:#8b5cf6">${r.hand_health_score}</div>
+        <div class="metric-val" style="color:var(--purple)">${r.handHealth}</div>
       </div>
-    </div>
-  `;
+    </div>`;
 
-  // Hand issues
-  if (r.hand_issues && r.hand_issues.length > 0) {
-    html += `<div class="issues-card">
+  if (r.handIssues.length) {
+    html += `<div class="issues-card fade-up" id="anim-hand">
       <div class="issues-header">
-        <div class="issues-icon" style="background:rgba(249,115,22,0.1);color:#f97316">✋</div>
+        <div class="issues-icon" style="background:rgba(249,115,22,0.1);color:#F97316"><img src="icons/hand.png" width="16" height="16" style="vertical-align:middle"></div>
         <div class="issues-title">手型问题</div>
-        <div class="issues-count" style="background:rgba(249,115,22,0.1);color:#f97316">${r.hand_issues.length} 处</div>
+        <div class="issues-count" style="background:rgba(249,115,22,0.1);color:#F97316">${r.handIssues.length} 处</div>
       </div>`;
-    r.hand_issues.forEach(i => {
+    r.handIssues.forEach(i => {
       html += `<div class="issue-item">
-        <div class="issue-measure" style="background:rgba(249,115,22,0.1);color:#f97316">${i.measure}</div>
-        <div class="issue-info">
-          <div class="issue-subtitle">第 ${i.measure} 小节</div>
-          <div class="issue-desc">${i.description}</div>
-        </div>
-        <div class="issue-time">${i.timestamp}s</div>
-      </div>`;
+        <div class="issue-measure" style="background:rgba(249,115,22,0.1);color:#F97316">${i.measure}</div>
+        <div class="issue-info"><div class="issue-subtitle">第 ${i.measure} 小节</div><div class="issue-desc">${i.desc}</div></div>
+        <div class="issue-time">${i.time}s</div></div>`;
     });
     html += '</div>';
   }
-
-  // Audio issues
-  if (r.audio_issues && r.audio_issues.length > 0) {
-    html += `<div class="issues-card">
+  if (r.audioIssues.length) {
+    html += `<div class="issues-card fade-up" id="anim-audio">
       <div class="issues-header">
-        <div class="issues-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6">🎵</div>
+        <div class="issues-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)"><img src="icons/note.png" width="16" height="16" style="vertical-align:middle"></div>
         <div class="issues-title">音准问题</div>
-        <div class="issues-count" style="background:rgba(139,92,246,0.1);color:#8b5cf6">${r.audio_issues.length} 处</div>
+        <div class="issues-count" style="background:rgba(139,92,246,0.1);color:var(--purple)">${r.audioIssues.length} 处</div>
       </div>`;
-    r.audio_issues.forEach(i => {
-      const desc = i.issue_type === 'missing_note'
-        ? `漏弹 ${i.expected || '?'}`
-        : `应为 ${i.expected || '?'},弹成了 ${i.actual || '?'}`;
+    r.audioIssues.forEach(i => {
+      const d = i.type === 'missing' ? `漏弹 ${i.expected}` : `应为 ${i.expected}，弹成了 ${i.actual}`;
       html += `<div class="issue-item">
-        <div class="issue-measure" style="background:rgba(139,92,246,0.1);color:#8b5cf6">${i.measure}</div>
-        <div class="issue-info">
-          <div class="issue-subtitle">第 ${i.measure} 小节</div>
-          <div class="issue-desc">${desc}</div>
-        </div>
-        <div class="issue-time">${i.timestamp}s</div>
-      </div>`;
+        <div class="issue-measure" style="background:rgba(139,92,246,0.1);color:var(--purple)">${i.measure}</div>
+        <div class="issue-info"><div class="issue-subtitle">第 ${i.measure} 小节</div><div class="issue-desc">${d}</div></div>
+        <div class="issue-time">${i.time}s</div></div>`;
     });
     html += '</div>';
   }
 
   document.getElementById('feedbackBody').innerHTML = html;
-  showPage('feedback');
+  go('feedback');
 
-  // Animate score
   setTimeout(() => {
-    document.getElementById('gaugeCircle').style.strokeDashoffset = offset;
-    animateNumber('scoreNum', 0, r.overall_score, 1500);
-  }, 100);
+    document.getElementById('anim-gauge').classList.add('show');
+    document.getElementById('gaugeFill').style.strokeDashoffset = offset;
+    animateNum('gaugeNum', 0, r.overall, 1800);
+  }, 200);
+  setTimeout(() => document.getElementById('anim-comment').classList.add('show'), 600);
+  setTimeout(() => typewriter('commentText', r.comment, 2500), 900);
+  setTimeout(() => document.getElementById('anim-metrics').classList.add('show'), 1200);
+  setTimeout(() => { const h = document.getElementById('anim-hand'); if (h) h.classList.add('show'); }, 1500);
+  setTimeout(() => { const a = document.getElementById('anim-audio'); if (a) a.classList.add('show'); }, 1800);
 
-  // Typewriter effect
-  typewriter('commentText', r.teacher_comment, 2000);
-
-  // Play audio + animate avatar
-  if (currentAudioUrl) {
-    playAudio(currentAudioUrl);
-  }
 }
 
-function animateNumber(id, from, to, duration) {
+function animateNum(id, from, to, dur) {
   const el = document.getElementById(id);
   const start = performance.now();
   function tick(now) {
-    const progress = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const p = Math.min((now - start) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
     el.textContent = Math.round(from + (to - from) * eased);
-    if (progress < 1) requestAnimationFrame(tick);
+    if (p < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 }
 
-function typewriter(id, text, duration) {
+function typewriter(id, text, dur) {
   const el = document.getElementById(id);
-  const charDelay = Math.min(duration / text.length, 80);
+  if (!el) return;
+  const delay = Math.min(dur / text.length, 60);
   let i = 0;
-  el.innerHTML = '<span class="comment-cursor"></span>';
-  const interval = setInterval(() => {
-    if (i >= text.length) {
-      clearInterval(interval);
-      el.innerHTML = text;
-      return;
-    }
-    el.innerHTML = text.substring(0, i + 1) + '<span class="comment-cursor"></span>';
+  el.innerHTML = '<span class="cursor-blink"></span>';
+  const iv = setInterval(() => {
+    if (i >= text.length) { clearInterval(iv); el.innerHTML = text; return; }
+    el.innerHTML = text.substring(0, i + 1) + '<span class="cursor-blink"></span>';
     i++;
-  }, charDelay);
+  }, delay);
 }
 
-function playAudio(url) {
-  if (currentAudio) currentAudio.pause();
-  currentAudio = new Audio(url);
-  const mouth = document.getElementById('avatarMouth');
-  currentAudio.onplay = () => mouth.classList.add('speaking');
-  currentAudio.onended = () => mouth.classList.remove('speaking');
-  currentAudio.onerror = () => mouth.classList.remove('speaking');
-  currentAudio.play().catch(() => mouth.classList.remove('speaking'));
-}
-
-function replayAudio() {
-  if (currentAudioUrl) playAudio(currentAudioUrl);
-}
-
-// ===== Reports =====
-async function loadReports() {
-  try {
-    const res = await fetch(`${baseUrl}/api/reports`);
-    const list = await res.json();
-    const container = document.getElementById('reportsList');
-    if (!list || list.length === 0) {
-      container.innerHTML = '<div class="empty-state">还没有练习记录哦</div>';
-      return;
-    }
-    container.innerHTML = list.map(r => `
-      <div class="report-item">
-        <div class="report-score-badge">${r.overall_score}</div>
-        <div class="report-info">
-          <div class="report-comment">${r.teacher_comment || '无评语'}</div>
-          <div class="report-date">${r.created_at || ''}</div>
-        </div>
+const DEMO_REPORTS = [
+  { score: 85, comment: '宝贝弹得很完整，老师能感觉到你认真练习了！', date: '2025-05-25 14:30' },
+  { score: 78, comment: '今天节奏感比上次好很多，继续加油哦！', date: '2025-05-24 16:20' },
+  { score: 92, comment: '太棒了！几乎没有错音，手型也很标准！', date: '2025-05-23 15:00' },
+];
+function renderReports() {
+  document.getElementById('reportsList').innerHTML = DEMO_REPORTS.map(r => `
+    <div class="report-item">
+      <div class="report-badge">${r.score}</div>
+      <div class="report-info">
+        <div class="report-comment">${r.comment}</div>
+        <div class="report-date">${r.date}</div>
       </div>
-    `).join('');
-  } catch (e) {
-    document.getElementById('reportsList').innerHTML =
-      '<div class="empty-state">加载失败，请检查后端连接</div>';
-  }
+    </div>`).join('');
 }
 
-// ===== Settings =====
-const presets = {
+const PRESETS = {
   deepseek: { url: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
-  qwen:     { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
-  glm:      { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4' },
-  kimi:     { url: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k' },
-  ollama:   { url: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:7b' },
+  qwen: { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
+  glm: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4' },
+  kimi: { url: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k' },
+  ollama: { url: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:7b' },
 };
-
 function applyPreset(name) {
-  const p = presets[name];
+  const p = PRESETS[name];
   document.getElementById('setLlmUrl').value = p.url;
   document.getElementById('setModel').value = p.model;
-  toast(`已切换到 ${name}`);
+  toast('已切换到 ' + name);
 }
 
-async function loadSettings() {
-  try {
-    const res = await fetch(`${baseUrl}/api/config`);
-    const cfg = await res.json();
-    document.getElementById('setLlmUrl').value = cfg.llm?.base_url || '';
-    document.getElementById('setModel').value = cfg.llm?.model || '';
-    document.getElementById('setTtsEngine').value = cfg.tts?.engine || 'edge-tts';
-    document.getElementById('setTtsVoice').value = cfg.tts?.voice || '';
-    if (cfg.llm?.api_key) {
-      document.getElementById('setApiKey').placeholder = `已保存 (${cfg.llm.api_key})，留空不修改`;
-    }
-    toast('配置已加载');
-  } catch (e) {
-    toast('加载失败: ' + e.message);
-  }
+function autoPlay() {
+  if (autoPlaying) return;
+  autoPlaying = true;
+  document.getElementById('autoPlayBtn').disabled = true;
+  document.getElementById('autoPlayBtn').textContent = '⏵ 演示中…';
+  resetDemo();
+
+  const seq = [
+    { delay: 1500, action: () => doUpload('小星星变奏曲.pdf') },
+    { delay: 2000, action: () => startPractice() },
+    { delay: 2500, action: () => { timerSec = 127; updateTimer(); } },
+    { delay: 2000, action: () => stopPractice() },
+    { delay: 8000, action: () => {} },
+    { delay: 4000, action: () => { document.querySelector('#page-feedback').scrollTo({ top: 400, behavior: 'smooth' }); }},
+    { delay: 3000, action: () => { document.querySelector('#page-feedback').scrollTo({ top: 800, behavior: 'smooth' }); }},
+    { delay: 3000, action: () => go('reports') },
+    { delay: 3000, action: () => go('home') },
+    { delay: 2000, action: () => {
+      autoPlaying = false;
+      document.getElementById('autoPlayBtn').disabled = false;
+      document.getElementById('autoPlayBtn').textContent = '▶ 自动演示';
+    }},
+  ];
+
+  let totalDelay = 0;
+  seq.forEach(step => {
+    totalDelay += step.delay;
+    autoTimer = setTimeout(step.action, totalDelay);
+  });
 }
 
-async function saveSettings() {
-  const newBase = document.getElementById('setBaseUrl').value.trim();
-  if (newBase) { baseUrl = newBase; localStorage.setItem('baseUrl', newBase); }
-
-  const patch = {
-    llm: {
-      base_url: document.getElementById('setLlmUrl').value.trim(),
-      model: document.getElementById('setModel').value.trim(),
-    },
-    tts: {
-      engine: document.getElementById('setTtsEngine').value.trim(),
-      voice: document.getElementById('setTtsVoice').value.trim(),
-    },
-  };
-  const key = document.getElementById('setApiKey').value.trim();
-  if (key) patch.llm.api_key = key;
-
-  try {
-    await fetch(`${baseUrl}/api/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch),
-    });
-    toast('已保存，新配置立即生效 ✓');
-  } catch (e) {
-    toast('保存失败: ' + e.message);
-  }
+function resetDemo() {
+  if (autoTimer) clearTimeout(autoTimer);
+  autoPlaying = false; clearInterval(timerInterval);
+  timerSec = 0; scoreUploaded = false;
+  document.getElementById('scoreName').textContent = '尚未上传';
+  document.getElementById('scoreIcon').className = 'score-icon empty';
+  document.getElementById('scoreIcon').innerHTML = '<img src="icons/note.png" width="28" height="28" style="display:block">';
+  document.getElementById('uploadLabel').textContent = '上传曲谱';
+  const badge = document.querySelector('.score-badge');
+  if (badge) badge.remove();
+  document.getElementById('practiceTimer').textContent = '00:00';
+  document.getElementById('feedbackBody').innerHTML = '';
+  document.getElementById('autoPlayBtn').disabled = false;
+  document.getElementById('autoPlayBtn').textContent = '▶ 自动演示';
+  go('home');
+  document.querySelectorAll('.page').forEach(p => p.scrollTop = 0);
 }
 
-async function testLLM() {
-  try {
-    toast('测试中…');
-    const res = await fetch(`${baseUrl}/api/config/test`, { method: 'POST' });
-    const data = await res.json();
-    if (data.ok) toast('连通成功 ✓ ' + (data.sample || ''));
-    else toast('失败: ' + (data.error || '未知错误'));
-  } catch (e) {
-    toast('测试失败: ' + e.message);
-  }
-}
-
-// Init
-document.getElementById('setBaseUrl').value = baseUrl;
+go('home');
 </script>
 </body>
 </html>
