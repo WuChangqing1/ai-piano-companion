@@ -35,3 +35,23 @@
 **问题**：`pip install` 时报 `UnicodeDecodeError: 'gbk' codec`。
 **原因**：Python 包注释含中文，Windows 默认 GBK 编码无法解析。
 **解决**：设置 `set PYTHONUTF8=1` 后重试。
+
+---
+
+### 2026-05-28 ONNX GPU 不可用：cuDNN 缺失
+
+**问题**：RTX 5070 已安装 CUDA 12.9，ONNX Runtime 检测到 CUDAExecutionProvider 但推理仍走 CPU。
+**原因**：`onnxruntime-gpu` 需要 cuDNN 9.x DLL（`cudnn64_9.dll`），系统未安装。
+**解决**：`pip install nvidia-cudnn-cu12`（安装 cuDNN 9.22），并在 Python 脚本中通过 `os.add_dll_directory()` 注册 `site-packages/nvidia/cudnn/bin/` 路径。
+
+### 2026-05-28 手写 MIDI 生成格式损坏
+
+**问题**：手动拼接 MIDI 二进制时，pretty_midi/Mido 报错 "data byte must be in range 0..127"。
+**原因**：1) 手写 variable-length delta encoding 实现有 bug；2) MusicXML 中某些音符音高超出 MIDI 范围（0-127）。
+**解决**：改用 `pretty_midi` 库的 Instrument/Note API 构建 MIDI，不再手写 binary。同时 clamp 音高值到 0-127。
+
+### 2026-05-28 conda run 管道 GBK 编码错误
+
+**问题**：`conda run -n AIqinban python script.py` 报 `UnicodeEncodeError: 'gbk'`，conda 管道输出中文时失败。
+**原因**：Windows 下 conda run 用 GBK 编码捕获子进程输出，中文/emoji 字符无法编码。
+**解决**：改用 Python 解释器完整路径直接运行：`D:/path/to/python.exe script.py`，并设置 `PYTHONIOENCODING=utf-8`。

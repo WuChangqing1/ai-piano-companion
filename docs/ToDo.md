@@ -24,42 +24,16 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-## 2. 逐模块测试
-
-### 2.1 手型检测（MediaPipe Hands）
+## 2. 逐模块测试（一键运行）
 
 ```bash
-conda run -n AIqinban --cwd backend python -c "
-from ai_models.hand_tracker import detect_hand_issues
-from pathlib import Path
-issues = detect_hand_issues(Path('test_data/test.mp4'))
-print(f'检测到 {len(issues)} 个手型问题:')
-for i in issues: print(f'  {i[\"measure\"]}小节 {i[\"description\"]}')
-"
+conda run -n AIqinban --cwd backend python tests/test_models.py
 ```
 
-### 2.2 音频转录（basic-pitch）
-
-```bash
-conda run -n AIqinban --cwd backend python -c "
-from ai_models.audio_amt import transcribe_and_diff
-from pathlib import Path
-result = transcribe_and_diff(Path('test_data/test.mp4'))
-print(f'错音 {len(result[\"wrong\"])} 个, 漏音 {len(result[\"missing\"])} 个, 节奏评分 {result[\"rhythm_score\"]}')
-"
-```
-
-### 2.3 曲谱解析（Oemer，逐页）
-
-```bash
-conda run -n AIqinban --cwd backend python -c "
-from ai_models.omr_parser import parse_score
-from pathlib import Path
-for f in ['test_data/1.jpg', 'test_data/2.jpg', 'test_data/3.jpg']:
-    result = parse_score(Path(f))
-    print(f'{f}: score_uid={result[\"score_uid\"]}, 小节数={result[\"measure_count\"]}')
-"
-```
+测试脚本位于 `backend/tests/test_models.py`，依次执行：
+- 手型检测（MediaPipe Hands）
+- 音频转录（basic-pitch）
+- 曲谱解析（Oemer，逐页）
 
 > 首次运行 Oemer 会自动下载模型 checkpoint（约 5-10 分钟）
 

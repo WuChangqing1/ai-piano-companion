@@ -5,7 +5,9 @@ Oemer OMR 曲谱解析引擎。
 """
 from __future__ import annotations
 
+import shutil
 import subprocess
+import tempfile
 import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -96,17 +98,29 @@ def _real_parse(score_file: Path) -> dict[str, Any]:
     output_dir = _STATIC_DIR / f"omr_{score_uid}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    result = subprocess.run(
-        ["oemer", str(score_file), "-o", str(output_dir), "--without-deskew"],
-        capture_output=True, text=True, timeout=600,
-    )
+    # OpenCV imread 在 Windows 上不支持中文路径 → 复制到临时 ASCII 路径
+    suffix = score_file.suffix or ".jpg"
+    tmp_dir = Path(tempfile.mkdtemp(prefix="oemer_"))
+    tmp_img = tmp_dir / f"score_input{suffix}"
+    try:
+        shutil.copy2(score_file, tmp_img)
+
+        result = subprocess.run(
+            ["oemer", str(tmp_img), "-o", str(output_dir), "--without-deskew"],
+            capture_output=True, timeout=600,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Oemer exited with code {result.returncode}: "
+                f"{result.stderr.decode('gbk', errors='replace')[:200]}"
+            )
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
     # 查找 Oemer 输出的 MusicXML 文件
     mxl_files = list(output_dir.glob("*.musicxml")) + list(output_dir.glob("*.xml"))
     if not mxl_files:
-        # oemer 可能把输出放在当前目录
-        mxl_files = list(Path.cwd().glob(f"{score_file.stem}*.musicxml")) + \
-                    list(Path.cwd().glob(f"{score_file.stem}*.xml"))
+        mxl_files = list(Path.cwd().glob("*.musicxml")) + list(Path.cwd().glob("*.xml"))
 
     midi_path = _STATIC_DIR / f"score_{score_uid}.mid"
 
@@ -114,7 +128,6 @@ def _real_parse(score_file: Path) -> dict[str, Any]:
         mxl_file = mxl_files[0]
         measure_count = _musicxml_to_midi(mxl_file, midi_path)
     else:
-        # Oemer 未能生成 MusicXML → Mock 占位
         midi_path.write_bytes(b"MThd\x00\x00\x00\x06\x00\x00\x00\x01\x00\x60")
         measure_count = 24
 
@@ -144,7 +157,10 @@ def parse_score(score_file: Path) -> dict[str, Any]:
     if not _MOCK_FALLBACK:
         try:
             return _real_parse(score_file)
-        except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
+        except (FileNotFoundError, subprocess.TimeoutExpired, Exception) as e:
+            import traceback
+            print(f"[omr_parser] 真实模型异常,回退 Mock: {e}")
+            traceback.print_exc()
             _MOCK_FALLBACK = True
             return _mock_parse(score_file)
     return _mock_parse(score_file)

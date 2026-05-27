@@ -9,6 +9,21 @@
 ## [Unreleased]
 
 ### Added
+- [2026-05-28] 综合评估脚本 `backend/tests/run_full_evaluation.py`（4 阶段全链路：Oemer + 手型 + 音频 + DeepSeek 报告）
+- [2026-05-28] 手型可视化：MediaPipe 骨架标注帧（问题帧 + 正常帧）
+- [2026-05-28] 测试报告命名规范：`REPORT_YYYY-MM-DD_HHMM.md` 格式
+
+### Changed
+- [2026-05-28] `omr_parser.py` 合并 MIDI 改用 `pretty_midi` 库（修复手写 binary MIDI 格式损坏）
+- [2026-05-28] ONNX GPU 加速配置：安装 `nvidia-cudnn-cu12`（cuDNN 9.22），脚本启动注册 DLL 路径
+- [2026-05-28] hand_tracker.py 降低检测阈值（conf 0.5→0.3, PIP 80°→100°），提升检出率
+
+### Fixed
+- [2026-05-28] 修复 conda run 管道 GBK 编码错误（改用 Python 解释器直接运行）
+- [2026-05-28] 修复 Oemer MusicXML 音符音高越界（clamp 至 MIDI 0-127）
+- [2026-05-28] 修复 numpy int64 JSON 序列化错误（自定义 NumpyEncoder）
+
+### Added
 - [2026-05-25] HTML 交互原型 Demo（`demo/AI琴伴Demo.html`）：手机边框、6页面、数字人动画、雷达图、评分仪表盘
 - [2026-05-25] Flutter Web 条件导入架构（`recorder.dart` + `recorder_mobile.dart` + `recorder_web.dart`）
 - [2026-05-25] 初始化项目记忆系统（docs/ 目录 + 6 个记忆文件）

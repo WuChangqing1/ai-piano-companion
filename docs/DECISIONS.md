@@ -86,3 +86,25 @@
 - 模型环境未就绪时不影响 Demo 展示
 - 每个模块的 Mock 异常只触发一次（模块级 _MOCK_FALLBACK 标记），避免反复重试
 - TTS 的 CosyVoice 失败时自动回退 edge-tts
+
+---
+
+## [2026-05-28] 综合测试报告命名规范
+
+**决策**：测试报告文件使用 `REPORT_YYYY-MM-DD_HHMM.md` 格式命名，保存在 `backend/tests/` 目录下。
+
+**为什么**：
+- 日期+时间命名可追溯每次测试的时间点，便于对比不同批次的评估结果
+- 放在 tests/ 目录下与测试脚本同目录，方便查找
+- 避免同名文件覆盖历史报告
+
+---
+
+## [2026-05-28] ONNX GPU 加速配置
+
+**决策**：通过 pip 安装 `nvidia-cudnn-cu12` 包（而非手动下载 cuDNN），并在脚本启动时通过 `os.add_dll_directory()` 注册 DLL 路径。
+
+**为什么**：
+- pip 安装方式比手动配置环境变量更可重复、更自动化
+- `os.add_dll_directory()` 在 Python 3.8+ 是标准做法，不依赖系统 PATH
+- cuDNN 9.22 配合 CUDA 12.9 / ONNX Runtime 1.26 在 RTX 5070 上可用

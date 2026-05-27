@@ -5,16 +5,15 @@
 ## 进行中
 
 - [ ] 分支管理：切回 `develop` 分支进行日常开发（当前在 `master`）
-- [ ] 逐模块联调测试（手型 / 音频 / 曲谱 / 全链路）
+- [ ] 端到端联调测试（视频上传 → 手型+音频分析 → 评语 → TTS → 报告）
 
 ## 待办
 
 - [ ] CosyVoice 环境配置（独立 conda 环境 `AIqinban-models`）
 - [ ] 用户鉴权完善（当前为占位实现）
-- [ ] 数字人形象优化（Lottie 动画替换）
-- [ ] Demo 视频录制（30秒展示视频）
 - [ ] Flutter Web 联调与 UI 细节优化
-- [ ] 端到端联调测试（视频上传 → 手型+音频分析 → 评语 → TTS → 报告）
+- [ ] Demo 视频录制（30秒展示视频）
+- [ ] 数字人形象优化（Lottie 动画替换）
 
 ## 已完成
 
@@ -43,3 +42,8 @@
 - [x] [2026-05-27] **ffmpeg 已安装**（v8.1.1），音频提取可用
 - [x] [2026-05-27] **测试素材就绪**：`test.mp4`（弹琴视频）+ `1.jpg/2.jpg/3.jpg`（曲谱 3 页）放入 `backend/test_data/`
 - [x] [2026-05-27] `backend/test_data/` 加入 .gitignore
+- [x] [2026-05-28] **Oemer ONNX 环境验证通过**：3 页曲谱解析成功，合并 MIDI 911 音符/71 小节
+- [x] [2026-05-28] **cuDNN 9.22 安装**：ONNX GPU (CUDA 12.9) 可用，RTX 5070 已注册
+- [x] [2026-05-28] **综合评估脚本**：`backend/tests/run_full_evaluation.py` 完成
+- [x] [2026-05-28] **DeepSeek v4-pro 报告生成**：手型 34 问题 + 音频 diff + 专家建议 → `backend/tests/COMPREHENSIVE_REPORT.md`
+- [x] [2026-05-28] **手型可视化**：17 张问题帧 + 6 张正常帧，MediaPipe 骨架标注

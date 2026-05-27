@@ -85,20 +85,28 @@
 
 ---
 
-## 2026-05-25 会话（状态检测与文档更新）
+## 2026-05-28 会话（综合测试评估）
 
 **做了什么**：
-- 检测项目当前状态（git、分支、未跟踪文件、虚拟环境、文档完整性）
-- 更新 PROGRESS.md：调整"进行中"任务（移动已完成项、新增分支管理任务）
-- 更新 ISSUES.md：记录分支管理问题（当前在 master 而非 develop）
-- 发现 `frontend_app/` 大量文件未跟踪，`start_backend.bat` / `start_flutter_web.bat` 未提交
+- 验证 Oemer ONNX 环境：3 页曲谱全部解析成功（合并 MIDI 911 音符 / 71 小节）
+- 安装 cuDNN 9.22（`nvidia-cudnn-cu12`），注册 GPU DLL 目录，ONNX CUDA Provider 可用
+- 编写 `backend/tests/run_full_evaluation.py` 综合评估脚本：
+  - 阶段 1：Oemer 曲谱解析 + pretty_midi 合并标准 MIDI
+  - 阶段 2：MediaPipe Hands 手型检测 + 骨架可视化（23 张标注帧）
+  - 阶段 3：basic-pitch 音频转录 + 与标准 MIDI 逐音符比对（838 vs 911 音符）
+  - 阶段 4：DeepSeek v4-pro API 生成中文评估报告
+- DeepSeek API 配置：Windows 环境变量 `DeepSeek`，模型 `deepseek-v4-pro`
+- 生成 `backend/tests/COMPREHENSIVE_REPORT.md`：
+  - 手型：34 个问题（折指 16 + 掌关节塌陷 18），中指/无名指是高发区
+  - 音准：正确率 38.5%（351/911），错音 487，漏音 560
+  - 节奏：60 分，tempo 448.7 BPM
+  - 含 5 条可执行练习建议
+- 更新 PROGRESS.md / ISSUES.md
 
-**当前状态摘要**：
-- 分支：`master`（领先 origin/master 1 commit，需合并到 develop）
-- 未跟踪：frontend_app/.gitignore, .metadata, README.md, analysis_options.yaml, android/, assets/, pubspec.lock, test/, web/, start_backend.bat, start_flutter_web.bat
-- 虚拟环境：backend/.venv 正常
-- 文档：7 个记忆文件完整
+**git commit**: `b1a81c7`
 
-**下一步建议**：
-- 将 master 的 commit 合并到 develop，切回 develop 开发
-- 将未跟踪的项目文件加入 git 并提交
+**下次继续**：
+- 查看手型标注帧图片，确认 MediaPipe 检测质量
+- 验证 ONNX GPU 实际加速效果（当前 Oemer 走缓存跳过）
+- 端到端 Swagger 联调测试
+- 切回 develop 分支

@@ -1,6 +1,6 @@
 # 项目架构
 
-> 最后更新：2026-05-26
+> 最后更新：2026-05-28
 
 ## 系统概览
 
@@ -42,6 +42,11 @@ ai_qinban_project/
 │   │   ├── omr_parser.py       # 曲谱识别（Oemer CLI + MusicXML→MIDI / Mock）
 │   │   ├── llm_client.py       # LLM 调用（OpenAI 兼容协议）
 │   │   └── tts_engine.py       # TTS 合成（edge-tts / CosyVoice）
+│   ├── tests/                   # 测试脚本与报告
+│   │   ├── test_models.py       # 逐模块单元测试
+│   │   ├── run_full_evaluation.py  # 综合评估脚本（4 阶段全链路）
+│   │   ├── diag_oemer.py        # Oemer 诊断脚本
+│   │   └── REPORT_*.md          # 评估报告（命名: REPORT_日期_时间.md）
 │   └── api/                    # API 路由
 │       ├── config.py           # 配置中心 API
 │       ├── score.py            # 曲谱上传 API

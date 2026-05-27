@@ -112,17 +112,20 @@ def _joint_angle(a, b, c) -> float:
 def _mock_detect(video_path: Path) -> list[dict[str, Any]]:
     """Mock 数据,所有真实模型都不可用时的兜底。"""
     issues = []
-    sample = random.randint(1, 4)
-    for i in range(sample):
+    samples = [
+        {"issue_type": "folded_finger", "description": "右手食指折指"},
+        {"issue_type": "folded_finger", "description": "右手中指折指"},
+        {"issue_type": "folded_finger", "description": "左手食指折指"},
+        {"issue_type": "collapsed_knuckle", "description": "右手无名指掌关节塌陷"},
+        {"issue_type": "collapsed_knuckle", "description": "左手小指掌关节塌陷"},
+    ]
+    for i in range(random.randint(1, 3)):
+        s = random.choice(samples)
         ts = round(random.uniform(2.0, 60.0), 2)
         issues.append({
             "timestamp": ts,
             "measure": max(1, int(ts // 2) + 1),
-            "issue_type": random.choice(["folded_finger", "collapsed_knuckle"]),
-            "description": random.choice([
-                "右手食指折指", "右手中指折指", "右手无名指掌关节塌陷",
-                "左手食指折指", "左手小指掌关节塌陷",
-            ]),
+            **s,
         })
     return issues
 
@@ -131,6 +134,9 @@ def detect_hand_issues(video_path: Path) -> list[dict[str, Any]]:
     if USE_REAL_MODEL:
         try:
             return _real_detect(video_path)
-        except Exception:
+        except Exception as e:
+            import traceback
+            print(f"[hand_tracker] 真实模型异常,回退 Mock: {e}")
+            traceback.print_exc()
             return _mock_detect(video_path)
     return _mock_detect(video_path)
