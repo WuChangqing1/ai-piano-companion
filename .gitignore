@@ -46,6 +46,7 @@ backend/ai_qinban.db
 backend/uploads/
 backend/static/
 backend/config.json
+backend/test_data/
 
 # === OS ===
 .DS_Store

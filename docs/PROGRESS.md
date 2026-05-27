@@ -1,10 +1,11 @@
 # 项目进度
 
-> 最后更新：2026-05-26
+> 最后更新：2026-05-27
 
 ## 进行中
 
 - [ ] 分支管理：切回 `develop` 分支进行日常开发（当前在 `master`）
+- [ ] 逐模块联调测试（手型 / 音频 / 曲谱 / 全链路）
 
 ## 待办
 
@@ -38,4 +39,7 @@
 - [x] [2026-05-26] **CosyVoice TTS 桥接**（tts_engine.py + cosyvoice_bridge.py：子进程调用 + edge-tts 兜底）
 - [x] [2026-05-26] 更新 CLAUDE.md（Conda 环境规范）
 - [x] [2026-05-26] 更新 requirements.txt（完整依赖列表）
-- [x] [2026-05-26] **后端启动成功**：删除冗余 `.venv`，确认 Conda `AIqinban` 环境正常运行，`uvicorn main:app --host 0.0.0.0 --port 8000 --reload` 可启动
+- [x] [2026-05-26] **后端启动成功**：删除冗余 `.venv`，确认 Conda `AIqinban` 环境正常运行
+- [x] [2026-05-27] **ffmpeg 已安装**（v8.1.1），音频提取可用
+- [x] [2026-05-27] **测试素材就绪**：`test.mp4`（弹琴视频）+ `1.jpg/2.jpg/3.jpg`（曲谱 3 页）放入 `backend/test_data/`
+- [x] [2026-05-27] `backend/test_data/` 加入 .gitignore

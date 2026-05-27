@@ -58,7 +58,7 @@
 - 删除冗余 `.venv`，确认 Conda `AIqinban` 中所有依赖正确安装
 - 验证后端正常启动：`/` 返回服务信息和版本号，`/docs` 返回 Swagger API 文档
 
-**git commit**: 待提交
+**git commit**: `3e7a2e7`
 
 ---
 
