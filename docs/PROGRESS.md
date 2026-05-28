@@ -6,7 +6,6 @@
 
 - [ ] 分支管理：切回 `develop` 分支进行日常开发（当前在 `master`）
 - [ ] 端到端联调测试（视频上传 → 手型+音频分析 → 评语 → TTS → 报告）
-- [ ] test3 流水线需重新运行（MusicXML tempo bug 已修复，需验证）
 - [ ] MusicXML→MIDI tempo 读取逻辑回迁到生产代码 `omr_parser.py`
 
 ## 待办
@@ -64,3 +63,4 @@
 - [x] [2026-05-28] **统一流水线脚本**：`backend/tests/run_full_pipeline.py` — 预检 + 5 阶段自动执行（Oemer → 手型 → 音频转录 → 比对 → HTML 报告）
 - [x] [2026-05-28] **修复 MusicXML→MIDI tempo 读取 bug**：`_read_musicxml_tempo()` 从 `<sound tempo="X"/>` 标签读取实际 BPM（之前硬编码 120 BPM 导致 test3 比对完全错误）
 - [x] [2026-05-28] **test3 数据测试**：81.5s 竖屏视频 + 1 页曲谱（tempo=90），手型分析已跑通（162 帧，平均分 90/100）
+- [x] [2026-05-28] **test3 流水线重新运行验证**：tempo bug 修复后全流程跑通（标准 MIDI 153s@90BPM，手型 90/100，HTML 报告 1206KB）

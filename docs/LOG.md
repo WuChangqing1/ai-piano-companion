@@ -153,9 +153,27 @@
 - 更新全部 docs/ 文档（ISSUES / DECISIONS / PROGRESS / CHANGELOG / ARCHITECTURE / LOG）
 - 分析 `analyze_hands.py` 支持输出目录参数
 
-**下一步**：
-- 重新运行 test3 流水线（`python tests/run_full_pipeline.py test3`）验证 tempo 修复
+---
+
+## 2026-05-28 会话（test3 流水线重新运行 + 验证）
+
+**做了什么**：
+- 修复 `run_full_pipeline.py` 的 ffprobe 输出解析：改为按视频流单独查询，解决多流输出混淆问题
+- 修复所有 subprocess 调用的 GBK 编码问题：统一使用 `encoding='utf-8', errors='replace'`
+- **重新运行 test3 流水线验证 tempo 修复**：
+  - Stage 1: Oemer 成功，标准 MIDI 153s @ 90 BPM（正确！之前是 115s @ 120 BPM）
+  - Stage 2: 手型分析 162 帧，平均分 90/100，199 个问题
+  - Stage 3: basic-pitch 转录 309 音符
+  - Stage 4: 音频比对 — 时间匹配 113 音符（正确 19，错音 94，漏音 82，多余音 196）
+  - Stage 5: HTML 报告生成 1206 KB
+- 分析比对结果：低分原因主要是弹奏速度不匹配（153s 曲谱 vs 81s 视频）+ basic-pitch 八度误识别
+- 更新 docs/ 文档
+
+**git commit**: `5d0b1cd`
+
+**下次继续**：
 - 将 tempo 读取逻辑回迁到 `omr_parser.py` 生产代码
+- 考虑音频比对加入八度容忍（octave-invariant comparison）
 - 切回 `develop` 分支
 
 

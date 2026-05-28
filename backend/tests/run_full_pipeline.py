@@ -60,21 +60,26 @@ def run_preflight(test_dir: Path, test_name: str) -> dict:
     else:
         video_path = video_files[0]
         # Get video info
-        result = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-             "-show_entries", "stream=width,height,codec_name",
-             "-of", "csv=p=0", str(video_path)],
-            capture_output=True, text=True, timeout=30
+        # Get video stream info (separate calls for reliability)
+        v_result = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=width,height", "-of", "csv=p=0", str(video_path)],
+            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30
         )
-        lines = result.stdout.strip().split('\n')
-        if not lines or not lines[0]:
+        d_result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", str(video_path)],
+            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30
+        )
+        v_line = v_result.stdout.strip()
+        d_line = d_result.stdout.strip()
+        if not v_line or ',' not in v_line:
             print(f"  [FAIL] Cannot read video metadata: {video_path.name}")
             all_ok = False
         else:
-            parts = lines[0].split(',')
-            width, height = int(parts[0]), int(parts[1]) if len(parts) > 1 else (0, 0)
-            duration_line = lines[-1] if len(lines) > 1 else lines[0]
-            duration = float(duration_line) if duration_line.replace('.','').isdigit() else 0
+            parts = v_line.split(',')
+            width, height = int(parts[0]), int(parts[1])
+            duration = float(d_line) if d_line and d_line.replace('.','').replace('N/A','').isdigit() else 0
             checks['video'] = {
                 'path': str(video_path), 'name': video_path.name,
                 'width': width, 'height': height, 'duration': duration,
@@ -100,9 +105,10 @@ def run_preflight(test_dir: Path, test_name: str) -> dict:
     # 3. Audio track in video
     if 'video' in checks:
         result = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type",
-             "-of", "csv=p=0", checks['video']['path']],
-            capture_output=True, text=True, timeout=30
+            ["ffprobe", "-v", "error", "-select_streams", "a:0",
+             "-show_entries", "stream=codec_type", "-of", "csv=p=0",
+             checks['video']['path']],
+            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30
         )
         has_audio = 'audio' in result.stdout
         checks['has_audio'] = has_audio
@@ -211,7 +217,8 @@ def run_oemer(test_dir: Path, checks: dict) -> Path:
         try:
             proc = subprocess.run(
                 [OEMER_EXE, str(img_path), "-o", str(page_out), "--without-deskew"],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, encoding='utf-8', errors='replace',
+                timeout=300, env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
             )
             elapsed = time.time() - t0
             if proc.returncode == 0 or mxl_file.exists():
@@ -311,7 +318,9 @@ def run_hand_analysis(test_dir: Path, checks: dict):
     t0 = time.time()
     result = subprocess.run(
         [PYTHON_EXE, str(analyze_script), video_path, str(report_dir)],
-        capture_output=True, text=True, timeout=600, cwd=str(Path(__file__).resolve().parent.parent)
+        capture_output=True, text=True, encoding='utf-8', errors='replace',
+        timeout=600, cwd=str(Path(__file__).resolve().parent.parent),
+        env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
     )
     elapsed = time.time() - t0
 
@@ -366,7 +375,8 @@ def run_audio_transcription(test_dir: Path):
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(video_path), "-vn", "-acodec", "pcm_s16le",
              "-ar", "22050", "-ac", "1", str(audio_wav)],
-            capture_output=True, timeout=60,
+            capture_output=True, timeout=60, encoding='utf-8', errors='replace',
+            env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
         )
         print(f"  Audio extracted: {audio_wav.stat().st_size // 1024} KB")
 

@@ -17,7 +17,9 @@
 - [2026-05-28] GPU 诊断脚本 `backend/tests/test_gpu_oemer.py`：ONNX CUDA Provider 可用性检测
 
 ### Fixed
-- [2026-05-28] **严重：MusicXML→MIDI 转换遗漏真实 tempo**：添加 `_read_musicxml_tempo()` 从 `<sound tempo="X"/>` 标签读取实际 BPM，修复硬编码 120 BPM 导致的时序错误
+- [2026-05-28] **严重：MusicXML→MIDI 转换遗漏真实 tempo**：添加 `_read_musicxml_tempo()` 从 `<sound tempo="X"/>` 标签读取实际 BPM，修复硬编码 120 BPM 导致的时序错误。经验证 test3 标准 MIDI 正确从 ~115s→153s
+- [2026-05-28] 修复 `run_full_pipeline.py` ffprobe 输出解析：改为 `-select_streams v:0` 单独查询视频流，避免多流输出混淆
+- [2026-05-28] 修复所有 subprocess 调用的 GBK 编码问题：统一 `encoding='utf-8', errors='replace'`
 - [2026-05-28] 手型图片中文显示 `?`：改用 PIL + 微软雅黑（msyh.ttc）渲染中文标注，替换 OpenCV putText
 - [2026-05-28] 修复 conda run 管道 GBK 编码错误（改用 Python 解释器直接运行）
 - [2026-05-28] 修复 Oemer MusicXML 音符音高越界（clamp 至 MIDI 0-127）
