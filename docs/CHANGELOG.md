@@ -9,6 +9,10 @@
 ## [Unreleased]
 
 ### Added
+- [2026-05-28] 音频转录脚本 `backend/tests/run_audio_transcribe.py`：basic-pitch ONNX 模型，视频音频 → MIDI
+- [2026-05-28] 音频比对脚本 `backend/tests/compare_audio.py`：自动时间对齐 + 错音/漏音/多余音检测 + 节奏分析 + 评分
+- [2026-05-28] 综合报告生成脚本 `backend/tests/generate_comprehensive_report.py`：手型分析 + 音频比对 + base64 内嵌图片 + 练习建议
+- [2026-05-28] 综合评估报告 `test_data/test2/COMPREHENSIVE_REPORT.md`（1.5MB，5 张手型骨架图 + 音频分析）
 - [2026-05-28] 手型分析流水线 `backend/tests/analyze_hands.py`：视频抽帧 + 21 点 MediaPipe 红色骨架 + 四维度评分（折指/塌陷/过伸/拇指内扣）+ 最差 5 帧筛选
 - [2026-05-28] GPU 诊断脚本 `backend/tests/test_gpu_oemer.py`：ONNX CUDA Provider 可用性检测
 

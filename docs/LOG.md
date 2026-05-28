@@ -132,8 +132,25 @@
 
 **补充**: `de68cc8` — 修复手型图片中文渲染（OpenCV → PIL + 微软雅黑）
 
+---
+
+## 2026-05-28 会话（音频比对 + 综合报告）
+
+**做了什么**：
+- 修正 basic-pitch API 调用：指定 `model_or_model_path` 为内置 ONNX 模型（无需 TensorFlow）
+- 编写 `backend/tests/run_audio_transcribe.py`：basic-pitch ONNX 转录 test2 音频 → MIDI（377 音符）
+- 编写 `backend/tests/compare_audio.py`：自动时间对齐（1.15s 起始偏移）+ 逐音符比对
+  - 发现音频比对匹配率低：仅 9/144 时间匹配音符音高正确（弹奏者与曲谱出入大）
+  - 确认无系统性八度偏移，节奏完美匹配（偏差 1.2 BPM）
+- 编写 `backend/tests/generate_comprehensive_report.py`：合并手型+音频 → 综合报告
+  - base64 内嵌 5 张手型骨架图，文件约 1.5MB
+  - 含手型分析、音频比对、练习建议三大部分
+- 更新 PROGRESS.md / CHANGELOG.md
+
 **下次继续**：
-- 查看 worst_5 图片确认骨架绘制质量
-- Oemer GPU 加速实测（当前 107s/页偏慢）
+- 验证 basic-pitch 转录准确性（播放转录 MIDI 对比原音频）
+- 确认综合报告中图片是否能正常显示
 - 端到端 Swagger 联调测试
 - 切回 develop 分支
+
+
