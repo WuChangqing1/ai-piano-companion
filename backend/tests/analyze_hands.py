@@ -219,6 +219,41 @@ def _analyze_single_hand(landmarks, hand_tag):
     return issues, deductions, problem_mcps
 
 
+def _is_playing_posture(landmarks, w, h):
+    """
+    判断手是否在弹奏姿势（非撩头发/调姿势等）。
+    返回: (is_playing: bool, reason: str)
+    """
+    wrist = landmarks[0]
+    thumb_mcp = landmarks[1]
+    pinky_mcp = landmarks[17]
+
+    wrist_y_abs = wrist.y * h
+
+    # 1. 手腕不能太靠上（弹奏时手腕在画面下半区域）
+    if wrist_y_abs < h * 0.15:
+        return False, f"手腕过高(y={wrist_y_abs/h:.1%})"
+
+    # 2. 手指张开幅度不能太小（弹奏时手指自然会分开）
+    finger_span = math.hypot(
+        (thumb_mcp.x - pinky_mcp.x) * w,
+        (thumb_mcp.y - pinky_mcp.y) * h,
+    )
+    if finger_span < w * 0.012:
+        return False, f"手指未张开(span={finger_span/w:.1%})"
+
+    # 3. 手部区域不能太小（太远 = 不在琴上）
+    mcp_y_max = max(landmarks[i].y for i in range(1, 21))
+    mcp_y_min = min(landmarks[i].y for i in range(1, 21))
+    mcp_x_max = max(landmarks[i].x for i in range(1, 21))
+    mcp_x_min = min(landmarks[i].x for i in range(1, 21))
+    hand_area = (mcp_x_max - mcp_x_min) * w * (mcp_y_max - mcp_y_min) * h
+    if hand_area < (w * h) * 0.001:
+        return False, f"手部过小(area={hand_area/(w*h):.1%})"
+
+    return True, f"弹奏中(wrist={wrist_y_abs/h:.0%})"
+
+
 def _score_frame(frame_issues, hands_detected):
     """
     对手型帧打分 (0-100, 越高越好)。
@@ -270,6 +305,7 @@ def analyze_video(video_path: Path, output_dir: Path, frame_interval: float = 0.
     sample_interval = max(1, int(fps * frame_interval))
     frame_idx = 0
     all_frame_results = []
+    skipped_reasons = {}
     total_hands_detected = 0
     total_frames_with_hands = 0
 
@@ -318,6 +354,12 @@ def analyze_video(video_path: Path, output_dir: Path, frame_interval: float = 0.
         for hand_idx, lm_list in enumerate(res.multi_hand_landmarks):
             hand_tag = "右手" if hand_idx == 0 else "左手"
             landmarks = lm_list.landmark
+
+            # 过滤非弹奏姿势（撩头发/调姿势/手离琴等）
+            is_playing, reason = _is_playing_posture(landmarks, width, height)
+            if not is_playing:
+                skipped_reasons[reason] = skipped_reasons.get(reason, 0) + 1
+                continue
 
             hand_issues, deductions, problem_mcps = _analyze_single_hand(landmarks, hand_tag)
             frame_issues.extend(hand_issues)
@@ -434,6 +476,7 @@ def analyze_video(video_path: Path, output_dir: Path, frame_interval: float = 0.
         "total_issues": len(all_issues_flat),
         "issues_by_type": dict(sorted(issue_by_type.items(), key=lambda x: -x[1])),
         "issues_by_finger": dict(sorted(issue_by_finger.items(), key=lambda x: -x[1])),
+        "skipped_by_filter": dict(sorted(skipped_reasons.items(), key=lambda x: -x[1])),
         "worst_5": worst_5,
     }
 
@@ -637,6 +680,10 @@ def main():
     print(f"  检测到手: {summary['frames_with_hands']} 帧")
     print(f"  平均分: {summary['avg_score']:.0f}/100")
     print(f"  总问题数: {summary['total_issues']}")
+    if summary.get("skipped_by_filter"):
+        print(f"  过滤统计（非弹奏姿势跳过）:")
+        for reason, count in summary["skipped_by_filter"].items():
+            print(f"    {reason}: {count} 次")
     print(f"  最差 5 帧已保存到: {REPORT_DIR / 'worst_5'}")
     print(f"  报告: {report_path}")
     print(f"  数据: {json_path}")

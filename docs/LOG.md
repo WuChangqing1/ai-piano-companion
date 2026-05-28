@@ -128,7 +128,9 @@
 - 输出目录：`test_data/hand_analysis_report/`（报告 + 数据 JSON + 全部帧 + 最差 5 帧）
 - 更新 PROGRESS.md / CHANGELOG.md / LOG.md
 
-**git commit**: 待提交
+**git commit**: `6e53e51`
+
+**补充**: `de68cc8` — 修复手型图片中文渲染（OpenCV → PIL + 微软雅黑）
 
 **下次继续**：
 - 查看 worst_5 图片确认骨架绘制质量
