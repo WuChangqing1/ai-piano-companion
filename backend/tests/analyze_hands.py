@@ -51,8 +51,8 @@ def _render_cn_texts(img_bgr, texts):
 # ── 配置 ─────────────────────────────────────────────
 BASE = Path(__file__).resolve().parent.parent
 TEST_DATA = BASE / "test_data"
-REPORT_DIR = TEST_DATA / "hand_analysis_report"
-DEFAULT_VIDEO = TEST_DATA / "test.mp4"
+REPORT_DIR = TEST_DATA / "test2" / "hand_analysis_report"
+DEFAULT_VIDEO = TEST_DATA / "test2" / "test.mp4"
 FRAME_INTERVAL = 0.5  # 每 0.5 秒抽一帧
 MAX_FRAMES = 0  # 0 = 不限制, 处理全部
 OUTPUT_WORST_N = 5  # 返回最差的 N 张
