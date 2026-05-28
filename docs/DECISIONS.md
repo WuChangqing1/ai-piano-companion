@@ -100,6 +100,31 @@
 
 ---
 
+## [2026-05-28] 报告格式：HTML 替代 Markdown
+
+**决策**：综合评估报告改用 HTML 格式（含 base64 内嵌图片 + CSS 样式），不再使用 Markdown。
+
+**为什么**：
+- App 使用 WebView 展示报告，HTML 可以直接渲染，Markdown 需要额外解析
+- HTML 可以嵌入 CSS 专业样式（渐变头部、评分卡片、响应式网格等），视觉效果远优于 Markdown
+- base64 内嵌图片使报告成为单文件，方便传输和存档
+- 用户反馈 Typora 中无法看到 Markdown 的 base64 图片，HTML 无此问题
+
+---
+
+## [2026-05-28] 流水线预检机制
+
+**决策**：在执行完整测试流水线之前，自动运行一系列预检（pre-flight checks），全部通过后才开始实际计算。
+
+**为什么**：
+- test3 的 MusicXML tempo bug 导致整个流水线结果作废，浪费大量计算资源
+- 预检可以在 2 秒内发现数据问题（如视频无音频、曲谱页数不匹配、依赖缺失），而不是等 20 分钟流水线跑完才发现
+- 检查项：视频元数据（FPS/时长/音轨）、曲谱页数、Python 依赖、Oemer CLI 可用性
+
+**实现**：`run_full_pipeline.py` 中的 `_preflight_check()` 函数
+
+---
+
 ## [2026-05-28] ONNX GPU 加速配置
 
 **决策**：通过 pip 安装 `nvidia-cudnn-cu12` 包（而非手动下载 cuDNN），并在脚本启动时通过 `os.add_dll_directory()` 注册 DLL 路径。

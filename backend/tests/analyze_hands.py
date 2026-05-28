@@ -646,26 +646,31 @@ def _generate_report(summary: dict, output_dir: Path):
 
 def main():
     video_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_VIDEO
+    output_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else REPORT_DIR
 
     if not video_path.exists():
         print(f"错误: 视频文件不存在: {video_path}")
         sys.exit(1)
 
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     print("=" * 60)
     print(" AI 琴伴 - 手型分析流水线")
     print(f" 启动: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f" 视频: {video_path}")
+    print(f" 输出: {output_dir}")
     print("=" * 60)
 
     t0 = time.time()
 
     # 执行分析
-    summary, all_results = analyze_video(video_path, REPORT_DIR, FRAME_INTERVAL)
+    summary, all_results = analyze_video(video_path, output_dir, FRAME_INTERVAL)
 
     # 生成报告
-    report_path = _generate_report(summary, REPORT_DIR)
+    report_path = _generate_report(summary, output_dir)
 
     # 保存 JSON 数据
-    json_path = REPORT_DIR / "hand_analysis_data.json"
+    json_path = output_dir / "hand_analysis_data.json"
     json_path.write_text(
         json.dumps(summary, ensure_ascii=False, indent=2, default=str),
         encoding="utf-8",
@@ -684,7 +689,7 @@ def main():
         print(f"  过滤统计（非弹奏姿势跳过）:")
         for reason, count in summary["skipped_by_filter"].items():
             print(f"    {reason}: {count} 次")
-    print(f"  最差 5 帧已保存到: {REPORT_DIR / 'worst_5'}")
+    print(f"  最差 5 帧已保存到: {output_dir / 'worst_5'}")
     print(f"  报告: {report_path}")
     print(f"  数据: {json_path}")
 

@@ -6,7 +6,8 @@
 
 - [ ] 分支管理：切回 `develop` 分支进行日常开发（当前在 `master`）
 - [ ] 端到端联调测试（视频上传 → 手型+音频分析 → 评语 → TTS → 报告）
-- [ ] 音频比对匹配率低：当前弹奏与曲谱差异大（9/144 正确），需进一步验证 basic-pitch 转录准确性
+- [ ] test3 流水线需重新运行（MusicXML tempo bug 已修复，需验证）
+- [ ] MusicXML→MIDI tempo 读取逻辑回迁到生产代码 `omr_parser.py`
 
 ## 待办
 
@@ -15,6 +16,9 @@
 - [ ] Flutter Web 联调与 UI 细节优化
 - [ ] Demo 视频录制（30秒展示视频）
 - [ ] 数字人形象优化（Lottie 动画替换）
+- [ ] MusicXML→MIDI 使用 `divisions` 元素做精确时序（替代简化的 type→duration 映射）
+- [ ] 报告 `skipped_by_filter` 格式化显示（当前显示为 dict repr）
+- [ ] basic-pitch 转录准确率验证（播放转录 MIDI 对比原音频）
 
 ## 已完成
 
@@ -56,3 +60,7 @@
 - [x] [2026-05-28] **basic-pitch 音频转录**：ONNX 模型，test2 音频 → MIDI（377 音符）
 - [x] [2026-05-28] **音频比对修正**：自动时间对齐（1.15s 起始偏移），144 个时间匹配音符
 - [x] [2026-05-28] **综合评估报告**：`test2/COMPREHENSIVE_REPORT.md`（1.5MB，含 5 张 base64 手型骨架图 + 手型分析 + 音频比对 + 练习建议）
+- [x] [2026-05-28] **报告格式改为 HTML**：`backend/tests/generate_html_report.py` — 专业 CSS 样式 + base64 内嵌图片 + 响应式布局，适配 Flutter WebView
+- [x] [2026-05-28] **统一流水线脚本**：`backend/tests/run_full_pipeline.py` — 预检 + 5 阶段自动执行（Oemer → 手型 → 音频转录 → 比对 → HTML 报告）
+- [x] [2026-05-28] **修复 MusicXML→MIDI tempo 读取 bug**：`_read_musicxml_tempo()` 从 `<sound tempo="X"/>` 标签读取实际 BPM（之前硬编码 120 BPM 导致 test3 比对完全错误）
+- [x] [2026-05-28] **test3 数据测试**：81.5s 竖屏视频 + 1 页曲谱（tempo=90），手型分析已跑通（162 帧，平均分 90/100）

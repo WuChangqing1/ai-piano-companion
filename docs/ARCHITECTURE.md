@@ -43,10 +43,19 @@ ai_qinban_project/
 │   │   ├── llm_client.py       # LLM 调用（OpenAI 兼容协议）
 │   │   └── tts_engine.py       # TTS 合成（edge-tts / CosyVoice）
 │   ├── tests/                   # 测试脚本与报告
-│   │   ├── test_models.py       # 逐模块单元测试
-│   │   ├── run_full_evaluation.py  # 综合评估脚本（4 阶段全链路）
-│   │   ├── diag_oemer.py        # Oemer 诊断脚本
-│   │   └── REPORT_*.md          # 评估报告（命名: REPORT_日期_时间.md）
+│   │   ├── test_models.py         # 逐模块单元测试
+│   │   ├── run_full_pipeline.py   # 统一流水线脚本（预检 + 5 阶段全链路）
+│   │   ├── run_full_evaluation.py # 综合评估脚本（旧版，4 阶段 + DeepSeek）
+│   │   ├── analyze_hands.py       # 手型分析（抽帧 + MediaPipe 骨架 + 四维评分）
+│   │   ├── generate_html_report.py # HTML 综合报告生成器
+│   │   ├── run_audio_transcribe.py # basic-pitch 音频转录
+│   │   ├── compare_audio.py       # 音频比对（时间对齐 + 错音/漏音/多余音）
+│   │   ├── test_gpu_oemer.py      # ONNX GPU 诊断脚本
+│   │   └── diag_oemer.py          # Oemer 诊断脚本
+│   ├── test_data/                 # 测试数据（.gitignore 排除）
+│   │   ├── test1/                # 原始测试（113s 竖屏 + 3 页曲谱）
+│   │   ├── test2/                # 第二组（35s 横屏 1280x720 + 2 页曲谱）
+│   │   └── test3/                # 第三组（81.5s 竖屏 720x1280 + 1 页曲谱，tempo=90）
 │   └── api/                    # API 路由
 │       ├── config.py           # 配置中心 API
 │       ├── score.py            # 曲谱上传 API

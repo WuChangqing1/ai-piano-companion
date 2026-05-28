@@ -134,25 +134,30 @@
 
 ---
 
-## 2026-05-28 会话（音频比对 + 综合报告）
+## 2026-05-28 会话（HTML 报告 + 统一流水线 + tempo bug 修复）
 
 **做了什么**：
-- 修正 basic-pitch API 调用：指定 `model_or_model_path` 为内置 ONNX 模型（无需 TensorFlow）
-- 编写 `backend/tests/run_audio_transcribe.py`：basic-pitch ONNX 转录 test2 音频 → MIDI（377 音符）
-- 编写 `backend/tests/compare_audio.py`：自动时间对齐（1.15s 起始偏移）+ 逐音符比对
-  - 发现音频比对匹配率低：仅 9/144 时间匹配音符音高正确（弹奏者与曲谱出入大）
-  - 确认无系统性八度偏移，节奏完美匹配（偏差 1.2 BPM）
-- 编写 `backend/tests/generate_comprehensive_report.py`：合并手型+音频 → 综合报告
-  - base64 内嵌 5 张手型骨架图，文件约 1.5MB
-  - 含手型分析、音频比对、练习建议三大部分
-- 更新 PROGRESS.md / CHANGELOG.md
+- 将综合报告格式从 Markdown 改为 HTML（`backend/tests/generate_html_report.py`）：
+  - 专业 CSS 样式：渐变头部、评分卡片、四维指标网格、响应式布局
+  - base64 内嵌手型骨架图，单文件自包含
+  - 支持命令行参数指定测试目录
+  - 适配 Flutter WebView 直接渲染
+- 编写 `backend/tests/run_full_pipeline.py` 统一流水线脚本：
+  - 预检机制（pre-flight checks）：视频元数据、曲谱页数、音频轨道、Python 依赖、Oemer CLI
+  - 5 阶段自动执行：Oemer OMR → 手型分析 → 音频转录 → 比对 → HTML 报告
+- **发现并修复严重 bug**：MusicXML→MIDI 转换遗漏真实 tempo
+  - 根因：`omr_parser.py` 硬编码 120 BPM，忽略 MusicXML 的 `<sound tempo="90"/>` 标签
+  - test3 实际速度 90 BPM，生成的 MIDI 错误使用 120 BPM，导致 105.9 vs 192.5 BPM 的巨大差异
+  - 修复：`_read_musicxml_tempo()` 从 MusicXML 读取实际 BPM，`beat_duration = 60.0 / tempo`
+- test3 数据跑通：81.5s 竖屏视频，1 页曲谱（90 BPM），手型分析 162 帧/平均分 90
+- 更新全部 docs/ 文档（ISSUES / DECISIONS / PROGRESS / CHANGELOG / ARCHITECTURE / LOG）
+- 分析 `analyze_hands.py` 支持输出目录参数
 
-**git commit**: `dd9bed7`
+**下一步**：
+- 重新运行 test3 流水线（`python tests/run_full_pipeline.py test3`）验证 tempo 修复
+- 将 tempo 读取逻辑回迁到 `omr_parser.py` 生产代码
+- 切回 `develop` 分支
 
-**下次继续**：
-- 验证 basic-pitch 转录准确性（播放转录 MIDI 对比原音频）
-- 确认综合报告中图片是否能正常显示
-- 端到端 Swagger 联调测试
-- 切回 develop 分支
+
 
 

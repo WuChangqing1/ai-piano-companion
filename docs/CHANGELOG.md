@@ -9,28 +9,26 @@
 ## [Unreleased]
 
 ### Added
+- [2026-05-28] **统一流水线脚本** `backend/tests/run_full_pipeline.py`：预检机制 + 5 阶段自动执行（Oemer → 手型 → 音频转录 → 比对 → HTML 报告）
+- [2026-05-28] **HTML 综合报告** `backend/tests/generate_html_report.py`：专业 CSS 样式 + base64 内嵌图片 + 响应式布局，适配 Flutter WebView
 - [2026-05-28] 音频转录脚本 `backend/tests/run_audio_transcribe.py`：basic-pitch ONNX 模型，视频音频 → MIDI
 - [2026-05-28] 音频比对脚本 `backend/tests/compare_audio.py`：自动时间对齐 + 错音/漏音/多余音检测 + 节奏分析 + 评分
-- [2026-05-28] 综合报告生成脚本 `backend/tests/generate_comprehensive_report.py`：手型分析 + 音频比对 + base64 内嵌图片 + 练习建议
-- [2026-05-28] 综合评估报告 `test_data/test2/COMPREHENSIVE_REPORT.md`（1.5MB，5 张手型骨架图 + 音频分析）
 - [2026-05-28] 手型分析流水线 `backend/tests/analyze_hands.py`：视频抽帧 + 21 点 MediaPipe 红色骨架 + 四维度评分（折指/塌陷/过伸/拇指内扣）+ 最差 5 帧筛选
 - [2026-05-28] GPU 诊断脚本 `backend/tests/test_gpu_oemer.py`：ONNX CUDA Provider 可用性检测
 
 ### Fixed
+- [2026-05-28] **严重：MusicXML→MIDI 转换遗漏真实 tempo**：添加 `_read_musicxml_tempo()` 从 `<sound tempo="X"/>` 标签读取实际 BPM，修复硬编码 120 BPM 导致的时序错误
 - [2026-05-28] 手型图片中文显示 `?`：改用 PIL + 微软雅黑（msyh.ttc）渲染中文标注，替换 OpenCV putText
-- [2026-05-28] 综合评估脚本 `backend/tests/run_full_evaluation.py`（4 阶段全链路：Oemer + 手型 + 音频 + DeepSeek 报告）
-- [2026-05-28] 手型可视化：MediaPipe 骨架标注帧（问题帧 + 正常帧）
-- [2026-05-28] 测试报告命名规范：`REPORT_YYYY-MM-DD_HHMM.md` 格式
-
-### Changed
-- [2026-05-28] `omr_parser.py` 合并 MIDI 改用 `pretty_midi` 库（修复手写 binary MIDI 格式损坏）
-- [2026-05-28] ONNX GPU 加速配置：安装 `nvidia-cudnn-cu12`（cuDNN 9.22），脚本启动注册 DLL 路径
-- [2026-05-28] hand_tracker.py 降低检测阈值（conf 0.5→0.3, PIP 80°→100°），提升检出率
-
-### Fixed
 - [2026-05-28] 修复 conda run 管道 GBK 编码错误（改用 Python 解释器直接运行）
 - [2026-05-28] 修复 Oemer MusicXML 音符音高越界（clamp 至 MIDI 0-127）
 - [2026-05-28] 修复 numpy int64 JSON 序列化错误（自定义 NumpyEncoder）
+
+### Changed
+- [2026-05-28] **报告格式从 Markdown 改为 HTML**：更好的 WebView 兼容性，专业视觉呈现
+- [2026-05-28] `analyze_hands.py` 支持命令行指定输出目录参数
+- [2026-05-28] `omr_parser.py` 合并 MIDI 改用 `pretty_midi` 库（修复手写 binary MIDI 格式损坏）
+- [2026-05-28] ONNX GPU 加速配置：安装 `nvidia-cudnn-cu12`（cuDNN 9.22），脚本启动注册 DLL 路径
+- [2026-05-28] hand_tracker.py 降低检测阈值（conf 0.5→0.3, PIP 80°→100°），提升检出率
 
 ### Added
 - [2026-05-25] HTML 交互原型 Demo（`demo/AI琴伴Demo.html`）：手机边框、6页面、数字人动画、雷达图、评分仪表盘
