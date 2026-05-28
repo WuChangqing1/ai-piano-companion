@@ -110,3 +110,28 @@
 - 验证 ONNX GPU 实际加速效果（当前 Oemer 走缓存跳过）
 - 端到端 Swagger 联调测试
 - 切回 develop 分支
+
+---
+
+## 2026-05-28 会话（手型分析流水线）
+
+**做了什么**：
+- 确认 ONNX Runtime CUDA Provider 可用（RTX 5070 + cuDNN 9.22），Oemer 无需 TensorFlow
+- 编写 `backend/tests/analyze_hands.py` 手型分析流水线：
+  - 视频每 0.5s 抽帧，MediaPipe Hands 21 点关键点检测
+  - 红色骨架连线绘制（问题手指亮橙黄加粗标注）
+  - 四维度评分：折指（PIP<90°）、掌关节塌陷（MCP低于PIP>0.01）、过度伸直（PIP>178°）、拇指内扣
+  - 最差 5 帧自动筛选 + 输出
+- 编写 `backend/tests/test_gpu_oemer.py` GPU 诊断脚本
+- 测试视频 test.mp4（113s）分析结果：226 帧，225 帧检测到手，平均分 95/100，208 个问题
+- 最差 5 帧：t=87.0s(40分)、t=76.5s(59分)、t=95.0s(65分)、t=113.0s(68分)、t=24.5s(72分)
+- 输出目录：`test_data/hand_analysis_report/`（报告 + 数据 JSON + 全部帧 + 最差 5 帧）
+- 更新 PROGRESS.md / CHANGELOG.md / LOG.md
+
+**git commit**: 待提交
+
+**下次继续**：
+- 查看 worst_5 图片确认骨架绘制质量
+- Oemer GPU 加速实测（当前 107s/页偏慢）
+- 端到端 Swagger 联调测试
+- 切回 develop 分支

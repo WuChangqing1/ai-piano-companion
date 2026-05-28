@@ -1,6 +1,6 @@
 # 项目进度
 
-> 最后更新：2026-05-27
+> 最后更新：2026-05-28
 
 ## 进行中
 
@@ -47,3 +47,5 @@
 - [x] [2026-05-28] **综合评估脚本**：`backend/tests/run_full_evaluation.py` 完成
 - [x] [2026-05-28] **DeepSeek v4-pro 报告生成**：手型 34 问题 + 音频 diff + 专家建议 → `backend/tests/COMPREHENSIVE_REPORT.md`
 - [x] [2026-05-28] **手型可视化**：17 张问题帧 + 6 张正常帧，MediaPipe 骨架标注
+- [x] [2026-05-28] **手型分析流水线**：`backend/tests/analyze_hands.py` — 视频抽帧 + 21点红色骨架 + 四维度评分 + 最差5帧
+- [x] [2026-05-28] **ONNX GPU 诊断**：`backend/tests/test_gpu_oemer.py` — 确认 CUDAExecutionProvider 可用，RTX 5070 已识别
