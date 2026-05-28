@@ -1,0 +1,27 @@
+{
+  "llm": {
+    "provider": "deepseek",
+    "base_url": "https://api.deepseek.com/v1",
+    "api_key": "",
+    "model": "deepseek-chat",
+    "temperature": 0.8,
+    "max_tokens": 200
+  },
+  "tts": {
+    "engine": "cosyvoice",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "rate": "+0%",
+    "pitch": "+0Hz",
+    "cosyvoice_url": "http://127.0.0.1:9880",
+    "cosyvoice_speaker": "中文女",
+    "cosyvoice_speed": 1.0
+  },
+  "prompt": {
+    "system": "你是一位温柔的钢琴老师,正在和一个 4-12 岁的孩子说话。请用富有情绪价值、鼓励、温暖的语气,把孩子练琴的错误反馈给他。先肯定优点,再温柔指出问题。控制在 100 字以内,不要使用专业术语。",
+    "user_template": "孩子刚刚弹完一首曲子。错误数据如下:\n错音: {wrong_notes}\n漏音: {missing_notes}\n手型异常: {hand_issues}\n请你用温和鼓励的口吻给孩子一段反馈。"
+  },
+  "thresholds": {
+    "silence_seconds": 3.0,
+    "finger_angle_min": 90
+  }
+}

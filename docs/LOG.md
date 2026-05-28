@@ -176,6 +176,27 @@
 - 考虑音频比对加入八度容忍（octave-invariant comparison）
 - 切回 `develop` 分支
 
+---
+
+## 2026-05-29 会话（CosyVoice TTS 接入 + 端到端语音报告）
+
+**做了什么**：
+- **CosyVoice HTTP API 接入**：改用 CosyVoice_For_Windows 的 Flask API（端口 9880），不再需要复制 3GB 模型文件夹
+  - 更新 `tts_engine.py`：新增 `synthesize_sync()` 同步方法，`_synthesize_cosyvoice()` 改用 `requests` 调 HTTP API
+  - 更新 `config.json`：engine 改为 `cosyvoice`，新增 `cosyvoice_url/speaker/speed` 配置项
+  - 保留 edge-tts 兜底（CosyVoice 不可用时自动回退）
+- **流水线增加 TTS 阶段**（`run_full_pipeline.py`）：
+  - `_build_tts_text()`：根据手型/音频/综合分数生成温暖鼓励的老师点评文本
+  - `synthesize_tts()`：调用 CosyVoice API 合成音频（~933KB WAV，~22s）
+  - HTML 报告新增「老师点评语音」卡片：`<audio>` 播放器 + JavaScript 自动播放 + 播放完毕提示
+- **端到端验证**：test3 全流程跑通（Oemer → 手型 → 音频转录 → 比对 → TTS → HTML 报告，27s）
+
+**git commit**: `e411caa`
+
+**下次继续**：
+- 将 tempo 读取逻辑回迁到 `omr_parser.py` 生产代码
+- 切回 `develop` 分支
+
 
 
 

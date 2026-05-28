@@ -552,8 +552,9 @@ def run_audio_comparison(test_dir: Path, trans_midi: Path, std_midi: Path):
 # STAGE 5: HTML Report
 # ═══════════════════════════════════════════════════════
 
-def generate_html_report(test_dir: Path, hand_data: dict, audio_data: dict, test_name: str):
-    """Generate final HTML report with embedded hand images."""
+def generate_html_report(test_dir: Path, hand_data: dict, audio_data: dict,
+                         test_name: str, tts_audio: Path | None = None):
+    """Generate final HTML report with embedded hand images and teacher TTS audio."""
     print("\n" + "=" * 60)
     print(" STAGE 5: HTML Report")
     print("=" * 60)
@@ -768,8 +769,57 @@ tr:hover td {{ background:#fafbff; }}
     if ibt.get('thumb_tucked', 0): html += f'<li><b>拇指内扣（{ibt["thumb_tucked"]}次）</b>：拇指应自然外展，与食指形成C形。</li>'
     if audio_data['tempo_score'] >= 90: html += f'<li><b>节奏（{audio_data["tempo_score"]}/100）</b>：优秀！与标准曲速偏差仅 {tdiff:.1f} BPM。</li>'
     else: html += f'<li><b>节奏（{audio_data["tempo_score"]}/100）</b>：与标准曲速偏差 {tdiff:.1f} BPM，建议节拍器慢练。</li>'
-    if audio_data['pitch_score'] < 50: html += f'<li><b>音准（{audio_data["pitch_score"]}/100）</b>：匹配度较低，建议分手慢练，对照曲谱逐小节检查。</li>'
+    html += f'''<li><b>音准（{audio_data["pitch_score"]}/100）</b>：匹配度较低，建议分手慢练，对照曲谱逐小节检查。</li>'''
     html += f'''</ul></div>
+
+<div class="section" id="audio-section">
+<h2>老师点评语音</h2>
+<audio id="teacherAudio" controls style="width:100%;max-width:600px;margin:8px 0" preload="auto">
+<source src="teacher_feedback.wav" type="audio/wav">
+你的浏览器不支持音频播放。
+</audio>
+<p style="font-size:13px;color:#6b7280;margin-top:8px" id="audioHint">点击播放按钮收听老师的语音点评 ｜ 播放完毕后自动停止</p>
+</div>
+<script>
+(function() {{
+    var audio = document.getElementById('teacherAudio');
+    if (!audio) return;
+    var hint = document.getElementById('audioHint');
+    var played = false;
+    var attemptPlay = function() {{
+        if (played) return;
+        var p = audio.play();
+        if (p && p.then) {{
+            p.then(function() {{
+                played = true;
+                if (hint) hint.textContent = '正在播放老师的语音点评...';
+            }}).catch(function() {{
+                if (hint) hint.textContent = '自动播放被浏览器阻止，请点击上方播放按钮收听';
+            }});
+        }}
+    }};
+    // Try autoplay on load
+    window.addEventListener('load', function() {{
+        setTimeout(attemptPlay, 300);
+    }});
+    // Also try on first user interaction
+    var interacted = false;
+    var onInteract = function() {{
+        if (interacted) return;
+        interacted = true;
+        attemptPlay();
+        document.removeEventListener('click', onInteract);
+        document.removeEventListener('touchstart', onInteract);
+    }};
+    document.addEventListener('click', onInteract);
+    document.addEventListener('touchstart', onInteract);
+    // When audio ends
+    audio.addEventListener('ended', function() {{
+        if (hint) hint.textContent = '语音点评已播放完毕';
+    }});
+}})();
+</script>
+
 <div class="section" style="text-align:center"><h2 style="border:none;justify-content:center">评分汇总</h2>
 <table><tr><th>维度</th><th>手型</th><th>音准</th><th>节奏</th><th>综合</th></tr>
 <tr><td><b>分数</b></td><td style="color:{sc(hand_score)};font-weight:700;font-size:16px">{hand_score}</td><td style="color:{sc(audio_data["pitch_score"])};font-weight:700;font-size:16px">{audio_data["pitch_score"]}</td><td style="color:{sc(audio_data["tempo_score"])};font-weight:700;font-size:16px">{audio_data["tempo_score"]}</td><td style="color:{sc(overall)};font-weight:700;font-size:18px">{overall}</td></tr>
@@ -784,6 +834,93 @@ tr:hover td {{ background:#fafbff; }}
     print(f"  Report: {html_path.name} ({file_size/1024:.0f} KB)")
     print(f"  Hand: {hand_score} | Audio: {audio_score} | Overall: {overall}")
     return str(html_path)
+
+
+# ═══════════════════════════════════════════════════════
+# STAGE 6: TTS Teacher Feedback
+# ═══════════════════════════════════════════════════════
+
+def _build_tts_text(hand_score: int, audio_score: int, overall: int,
+                    hand_data: dict, audio_data: dict) -> str:
+    """Generate warm teacher feedback text for TTS."""
+    hand_issues = hand_data.get('issues_by_type', {})
+    parts = []
+
+    # 开场
+    parts.append(f"同学你好，我是你的钢琴陪练老师。来看看你这次的练习情况吧。")
+
+    # 手型
+    if hand_score >= 90:
+        parts.append(f"你的手型得了{hand_score}分，表现非常棒，手指姿势很标准。")
+    elif hand_score >= 75:
+        parts.append(f"手型得了{hand_score}分，还不错哦。")
+        if hand_issues.get('folded_finger'):
+            parts.append(f"不过要注意，有{hand_issues['folded_finger']}次折指问题，第一关节要立起来。")
+        if hand_issues.get('collapsed_knuckle'):
+            parts.append(f"还有{hand_issues['collapsed_knuckle']}次掌关节塌陷，记得像握鸡蛋一样撑住手掌。")
+    else:
+        parts.append(f"手型方面需要多加练习，目前是{hand_score}分。")
+        if hand_issues.get('folded_finger'):
+            parts.append(f"折指问题比较明显，发生了{hand_issues['folded_finger']}次，每天做做高抬指练习会很有效。")
+
+    # 音频
+    if audio_score >= 75:
+        parts.append(f"音准和节奏得了{audio_score}分，弹得很准确。")
+    elif audio_score >= 50:
+        parts.append(f"音频方面得了{audio_score}分，还有进步空间。建议跟着节拍器慢慢练习，先弹对再弹快。")
+    else:
+        parts.append(f"音频得分{audio_score}分，别灰心，可能是转录不够准确。可以先分手慢练，确保每个音都弹清楚。")
+
+    # 综合
+    if overall >= 90:
+        parts.append(f"综合评分{overall}分，优秀！老师为你感到骄傲。")
+    elif overall >= 75:
+        parts.append(f"综合{overall}分，表现良好，继续加油。")
+    elif overall >= 60:
+        parts.append(f"综合{overall}分，已经及格了，再多练练一定会更好。")
+    else:
+        parts.append(f"综合{overall}分，每一次练习都在进步，坚持下去就是胜利。")
+
+    parts.append("今天的练习就到这里，记得每天坚持练琴哦，拜拜！")
+    return "".join(parts)
+
+
+def synthesize_tts(test_dir: Path, hand_score: int, audio_score: int,
+                   overall: int, hand_data: dict, audio_data: dict) -> Path | None:
+    """Call CosyVoice HTTP API to synthesize teacher feedback audio."""
+    print("\n" + "=" * 60)
+    print(" STAGE 6: TTS Teacher Feedback (CosyVoice)")
+    print("=" * 60)
+
+    text = _build_tts_text(hand_score, audio_score, overall, hand_data, audio_data)
+    print(f"  Text: {text[:80]}...({len(text)} chars)")
+
+    tts_audio = test_dir / "teacher_feedback.wav"
+
+    # Skip if already generated
+    if tts_audio.exists():
+        print(f"  [SKIP] TTS audio already exists ({tts_audio.stat().st_size // 1024} KB)")
+        return tts_audio
+
+    try:
+        import requests
+        resp = requests.get(
+            "http://127.0.0.1:9880/",
+            params={"text": text, "speaker": "中文女", "speed": 1.1},
+            timeout=120,
+        )
+        if resp.status_code == 200 and len(resp.content) > 0:
+            tts_audio.write_bytes(resp.content)
+            duration = len(resp.content) / (22050 * 2)  # 16-bit mono 22050Hz
+            print(f"  CosyVoice OK: {tts_audio.stat().st_size // 1024} KB, ~{duration:.0f}s")
+            return tts_audio
+        else:
+            print(f"  CosyVoice failed: HTTP {resp.status_code}")
+    except Exception as e:
+        print(f"  CosyVoice error: {e}")
+
+    print("  [WARN] TTS unavailable — report will have no audio")
+    return None
 
 
 # ═══════════════════════════════════════════════════════
@@ -842,13 +979,25 @@ def main():
             'pitch_errors_detail': [], 'missing_notes_detail': [], 'extra_notes_detail': [],
         }
 
+    # --- Stage 5: HTML Report (generated after TTS for audio embedding) ---
+    hand_score = round(hand_data['avg_score'])
+    audio_score_val = audio_data['overall_audio_score']
+    overall = round(hand_score * 0.5 + audio_score_val * 0.5)
+
+    # --- Stage 6: TTS Teacher Feedback ---
+    tts_audio = synthesize_tts(test_dir, hand_score, audio_score_val,
+                               overall, hand_data, audio_data)
+
     # --- Stage 5: HTML Report ---
-    html_path = generate_html_report(test_dir, hand_data, audio_data, test_name)
+    html_path = generate_html_report(test_dir, hand_data, audio_data,
+                                     test_name, tts_audio)
 
     total_elapsed = time.time() - t_total
     print(f"\n{'=' * 60}")
     print(f" PIPELINE COMPLETE ({total_elapsed:.0f}s)")
     print(f" Report: {html_path}")
+    if tts_audio:
+        print(f" TTS Audio: {tts_audio.name}")
     print(f"{'=' * 60}")
 
 
