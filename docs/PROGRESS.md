@@ -1,22 +1,22 @@
 # 项目进度
 
-> 最后更新：2026-05-28
+> 最后更新：2026-05-29
 
 ## 进行中
 
-- [ ] 分支管理：切回 `develop` 分支进行日常开发（当前在 `master`）
 - [ ] 端到端联调测试（视频上传 → 手型+音频分析 → 评语 → TTS → 报告）
 - [ ] MusicXML→MIDI tempo 读取逻辑回迁到生产代码 `omr_parser.py`
 
 ## 待办
 
+- [ ] 分支管理：切回 `develop` 分支进行日常开发
 - [ ] 用户鉴权完善（当前为占位实现）
-- [ ] Flutter Web 联调与 UI 细节优化
 - [ ] Demo 视频录制（30秒展示视频）
 - [ ] 数字人形象优化（Lottie 动画替换）
 - [ ] MusicXML→MIDI 使用 `divisions` 元素做精确时序（替代简化的 type→duration 映射）
 - [ ] 报告 `skipped_by_filter` 格式化显示（当前显示为 dict repr）
 - [ ] basic-pitch 转录准确率验证（播放转录 MIDI 对比原音频）
+- [ ] APK 真机测试（相机录制 + 上传 PC 后端 + 报告查看）
 
 ## 已完成
 
@@ -64,3 +64,7 @@
 - [x] [2026-05-28] **test3 数据测试**：81.5s 竖屏视频 + 1 页曲谱（tempo=90），手型分析已跑通（162 帧，平均分 90/100）
 - [x] [2026-05-28] **test3 流水线重新运行验证**：tempo bug 修复后全流程跑通（标准 MIDI 153s@90BPM，手型 90/100，HTML 报告 1206KB）
 - [x] [2026-05-29] **CosyVoice TTS 接入**：HTTP API 方式调用 CosyVoice_For_Windows（端口 9880），无需复制模型。流水线自动生成老师语音点评（~22s），HTML 内嵌 `<audio>` 播放器，支持自动播放 + 播放完毕自动停止
+- [x] [2026-05-29] **PC + Android 双端 Demo**：Demo.html 全面改造（去 AI 化、真实 API、CosyVoice 音色选择、emoji 图标、audio controls 播放器）
+- [x] [2026-05-29] **后端路由扩展**：`/demo` 路由（PC 浏览器演示页）、`/api/cosyvoice/speakers` 代理（手机端获取 CosyVoice 音色列表）
+- [x] [2026-05-29] **Flutter Android APK 壳**：WebView 加载 Demo.html + JavaScriptChannel 桥接 + 原生相机录制 + Dio 上传后端
+- [x] [2026-05-29] **PC 一键演示脚本** `demo_pc.bat`：自动检查后端 + CosyVoice + 执行流水线 + 打开浏览器

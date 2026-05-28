@@ -4,7 +4,7 @@
 
 ## 系统概览
 
-AI 琴伴是一个多模态（视觉+音频）钢琴陪练系统 MVP。用户通过 Flutter App 上传曲谱、录制弹奏视频，后端 FastAPI 服务对手型（MediaPipe）和音频（AMT）进行多模态分析，再经可配置的 LLM 生成温和评语、TTS 合成语音，最终以 2D 数字人形式呈现反馈。
+AI 琴伴是一个多模态（视觉+音频）钢琴陪练系统 MVP。支持 PC 浏览器和 Android APK 双端使用。用户录制/上传弹奏视频，后端 FastAPI 服务对手型（MediaPipe）和音频（AMT）进行多模态分析，再经可配置的 LLM 生成温和评语、TTS 合成语音，最终以 HTML5 报告页面呈现反馈。Android 端通过 Flutter WebView 壳加载 HTML 前端，JavaScriptChannel 桥接原生相机录制。
 
 **核心亮点**：用户可在 App 设置页自定义 LLM API（支持 DeepSeek / 通义 / 智谱 / Kimi / 本地 Ollama 等所有 OpenAI 兼容服务）与 TTS 引擎。
 

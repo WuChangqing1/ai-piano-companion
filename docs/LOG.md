@@ -178,24 +178,25 @@
 
 ---
 
-## 2026-05-29 会话（CosyVoice TTS 接入 + 端到端语音报告）
+## 2026-05-29 会话（PC 演示页 + Flutter WebView 壳）
 
 **做了什么**：
-- **CosyVoice HTTP API 接入**：改用 CosyVoice_For_Windows 的 Flask API（端口 9880），不再需要复制 3GB 模型文件夹
-  - 更新 `tts_engine.py`：新增 `synthesize_sync()` 同步方法，`_synthesize_cosyvoice()` 改用 `requests` 调 HTTP API
-  - 更新 `config.json`：engine 改为 `cosyvoice`，新增 `cosyvoice_url/speaker/speed` 配置项
-  - 保留 edge-tts 兜底（CosyVoice 不可用时自动回退）
-- **流水线增加 TTS 阶段**（`run_full_pipeline.py`）：
-  - `_build_tts_text()`：根据手型/音频/综合分数生成温暖鼓励的老师点评文本
-  - `synthesize_tts()`：调用 CosyVoice API 合成音频（~933KB WAV，~22s）
-  - HTML 报告新增「老师点评语音」卡片：`<audio>` 播放器 + JavaScript 自动播放 + 播放完毕提示
-- **端到端验证**：test3 全流程跑通（Oemer → 手型 → 音频转录 → 比对 → TTS → HTML 报告，27s）
+- Demo.html 全面改造：去 AI 化（6处） + 移除 Mock 代码 + 环境检测 + 真实 API 调用 + CosyVoice 音色选择 + emoji 图标 + `<audio controls>` 播放器
+- 后端新增 `/demo` 路由（PC 浏览器直接访问）+ `/api/cosyvoice/speakers` 代理（手机获取 CosyVoice 音色列表）
+- Flutter Android 壳：`webview_shell.dart`（JavaScriptChannel 桥接 + 原生录制 + Dio 上传 + 报告注入）
+- 生成 Android 构建文件（`flutter create --platforms=android .`）+ AndroidManifest 权限配置
+- pubspec.yaml 添加 `webview_flutter: ^4.10.0` + `assets/demo/`
+- 复制 Demo.html 到 `backend/static/demo.html` 和 `frontend_app/assets/demo/Demo.html`
+- 创建 `demo_pc.bat` 一键演示脚本
+- Android APK 编译卡住超过 1 小时（Gradle 首次构建下载依赖超时），已停止进程
 
-**git commit**: `e411caa`
+**git commit**: 待提交
 
 **下次继续**：
-- 将 tempo 读取逻辑回迁到 `omr_parser.py` 生产代码
-- 切回 `develop` 分支
+- 排查 Android APK 编译卡住原因（Gradle 依赖下载问题 / 网络 / 代理）
+- 尝试使用国内镜像源加速 Gradle 下载
+
+---
 
 
 

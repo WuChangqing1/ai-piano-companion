@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_config.dart';
-import 'screens/home_screen.dart';
+import 'webview_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +15,7 @@ class AiQinbanApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AI 琴伴',
+      title: '琴伴',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -29,7 +29,7 @@ class AiQinbanApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const HomeScreen(),
+      home: const WebViewShell(),
     );
   }
 }

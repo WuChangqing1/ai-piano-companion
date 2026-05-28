@@ -13,6 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import requests
 
 from api import score, evaluate, config as config_api, reports, auth
 from db.database import init_db
@@ -49,16 +51,42 @@ async def on_startup():
 
 @app.get("/")
 async def root():
+    """默认首页 → demo.html"""
+    demo_path = _STATIC_DIR / "demo.html"
+    if demo_path.exists():
+        return FileResponse(demo_path)
     return {
-        "service": "AI 琴伴 backend",
+        "service": "琴伴 backend",
         "version": "0.1.0",
         "docs": "/docs",
     }
 
 
+@app.get("/demo")
+async def demo():
+    """PC 浏览器演示页面"""
+    demo_path = _STATIC_DIR / "demo.html"
+    if demo_path.exists():
+        return FileResponse(demo_path)
+    return {"error": "demo.html not found"}
+
+
 @app.get("/health")
 async def health():
     return {"ok": True}
+
+
+@app.get("/api/cosyvoice/speakers")
+async def cosyvoice_speakers():
+    """代理 CosyVoice 音色列表，解决手机无法直接访问 127.0.0.1:9880 的问题"""
+    try:
+        resp = requests.get("http://127.0.0.1:9880/speakers", timeout=5)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception:
+        pass
+    # 返回默认列表
+    return {"speakers": ["中文女", "中文男", "英文女", "英文男"]}
 
 
 if __name__ == "__main__":

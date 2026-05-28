@@ -9,6 +9,11 @@
 ## [Unreleased]
 
 ### Added
+- [2026-05-29] **PC + Android 双端 Demo** `Demo.html`：去 AI 化 + 真实 API 调用 + CosyVoice 音色选择 + emoji 图标 + `<audio controls>` 完整播放器 + PC/WebView 双模式检测
+- [2026-05-29] **后端 `/demo` 路由**：PC 浏览器直接访问演示页面
+- [2026-05-29] **CosyVoice 音色代理** `GET /api/cosyvoice/speakers`：解决手机无法访问 127.0.0.1:9880 的问题
+- [2026-05-29] **Flutter WebView 壳** `webview_shell.dart`：JavaScriptChannel `Flutter` 桥接 + 原生相机录制 + Dio 上传 + 报告注入
+- [2026-05-29] **PC 一键演示脚本** `demo_pc.bat`：自动检查服务 → 执行流水线 → 打开浏览器
 - [2026-05-28] **统一流水线脚本** `backend/tests/run_full_pipeline.py`：预检机制 + 5 阶段自动执行（Oemer → 手型 → 音频转录 → 比对 → HTML 报告）
 - [2026-05-28] **HTML 综合报告** `backend/tests/generate_html_report.py`：专业 CSS 样式 + base64 内嵌图片 + 响应式布局，适配 Flutter WebView
 - [2026-05-28] 音频转录脚本 `backend/tests/run_audio_transcribe.py`：basic-pitch ONNX 模型，视频音频 → MIDI

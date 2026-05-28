@@ -1,6 +1,7 @@
 """配置接口 - 前端「设置页」对应,允许用户自定义模型 API。"""
 from __future__ import annotations
 
+import requests
 from fastapi import APIRouter, HTTPException
 
 from core.config_manager import get_config, update_config, mask_secrets
