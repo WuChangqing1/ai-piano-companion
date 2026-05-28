@@ -49,3 +49,4 @@
 - [x] [2026-05-28] **手型可视化**：17 张问题帧 + 6 张正常帧，MediaPipe 骨架标注
 - [x] [2026-05-28] **手型分析流水线**：`backend/tests/analyze_hands.py` — 视频抽帧 + 21点红色骨架 + 四维度评分 + 最差5帧
 - [x] [2026-05-28] **ONNX GPU 诊断**：`backend/tests/test_gpu_oemer.py` — 确认 CUDAExecutionProvider 可用，RTX 5070 已识别
+- [x] [2026-05-28] **手型图片中文渲染**：修复 OpenCV putText 中文显示 `?`，改用 PIL + 微软雅黑字体渲染

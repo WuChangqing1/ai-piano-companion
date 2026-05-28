@@ -11,6 +11,9 @@
 ### Added
 - [2026-05-28] 手型分析流水线 `backend/tests/analyze_hands.py`：视频抽帧 + 21 点 MediaPipe 红色骨架 + 四维度评分（折指/塌陷/过伸/拇指内扣）+ 最差 5 帧筛选
 - [2026-05-28] GPU 诊断脚本 `backend/tests/test_gpu_oemer.py`：ONNX CUDA Provider 可用性检测
+
+### Fixed
+- [2026-05-28] 手型图片中文显示 `?`：改用 PIL + 微软雅黑（msyh.ttc）渲染中文标注，替换 OpenCV putText
 - [2026-05-28] 综合评估脚本 `backend/tests/run_full_evaluation.py`（4 阶段全链路：Oemer + 手型 + 音频 + DeepSeek 报告）
 - [2026-05-28] 手型可视化：MediaPipe 骨架标注帧（问题帧 + 正常帧）
 - [2026-05-28] 测试报告命名规范：`REPORT_YYYY-MM-DD_HHMM.md` 格式

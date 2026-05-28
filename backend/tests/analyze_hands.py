@@ -13,6 +13,40 @@ from pathlib import Path
 import cv2
 import mediapipe as mp
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+
+# ── PIL 中文渲染 ──────────────────────────────────────
+_CN_FONT = None
+_CN_FONT_SM = None
+for _fp in ["C:/Windows/Fonts/msyh.ttc", "C:/Windows/Fonts/simhei.ttf"]:
+    if os.path.exists(_fp):
+        try:
+            _CN_FONT = ImageFont.truetype(_fp, 20)
+            _CN_FONT_SM = ImageFont.truetype(_fp, 14)
+            break
+        except Exception:
+            pass
+
+def _render_cn_texts(img_bgr, texts):
+    """
+    在 OpenCV BGR 图像上一次性渲染所有中文文本。
+    texts: [(text, (x, y), font_size, (b,g,r), stroke_bg), ...]
+    """
+    if _CN_FONT is None or not texts:
+        return
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    pil_img = Image.fromarray(img_rgb)
+    draw = ImageDraw.Draw(pil_img)
+    for text, pos, fsize, color_bgr, stroke_bg in texts:
+        font = _CN_FONT_SM if fsize <= 14 else _CN_FONT
+        color_rgb = (color_bgr[2], color_bgr[1], color_bgr[0])
+        if stroke_bg:
+            for dx in (-1, 1):
+                for dy in (-1, 1):
+                    draw.text((pos[0]+dx, pos[1]+dy), text, font=font, fill=(255, 255, 255))
+        draw.text(pos, text, font=font, fill=color_rgb)
+    result = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    img_bgr[:] = result
 
 # ── 配置 ─────────────────────────────────────────────
 BASE = Path(__file__).resolve().parent.parent
@@ -57,29 +91,26 @@ def _joint_angle(a, b, c):
 
 
 def _draw_skeleton(frame, landmarks, w, h, issue_fingers):
-    """在帧上绘制 21 点红色骨架。issue_fingers 为有问题的 MCP 索引集合。"""
+    """在帧上绘制 21 点红色骨架（仅线条+圆点，不含文字）。返回(标注帧, 待渲染中文文本列表)。"""
     overlay = frame.copy()
+    cn_texts = []
 
     # ── 绘制连接线（红色主线 + 问题区域加粗亮黄） ──
     for conn in HAND_CONNECTIONS:
         i1, i2 = conn
         x1, y1 = int(landmarks[i1].x * w), int(landmarks[i1].y * h)
         x2, y2 = int(landmarks[i2].x * w), int(landmarks[i2].y * h)
-
-        # 判断这条线是否属于问题手指
         is_problem = False
         for mcp_idx in issue_fingers:
-            # 获取该手指的所有关节索引
             base = mcp_idx
             finger_joints = {base, base + 1, base + 2, base + 3}
             if i1 in finger_joints and i2 in finger_joints:
                 is_problem = True
                 break
-
         if is_problem:
-            cv2.line(overlay, (x1, y1), (x2, y2), (0, 100, 255), 4)  # 亮橙黄，加粗
+            cv2.line(overlay, (x1, y1), (x2, y2), (0, 100, 255), 4)
         else:
-            cv2.line(overlay, (x1, y1), (x2, y2), (0, 0, 255), 2)  # 红色
+            cv2.line(overlay, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
     # ── 绘制 21 个关键点 ──
     for i, lm in enumerate(landmarks):
@@ -88,17 +119,13 @@ def _draw_skeleton(frame, landmarks, w, h, issue_fingers):
         is_problem = i in issue_fingers
 
         if is_problem:
-            # 问题 MCP：大红色圆 + 标签
             cv2.circle(overlay, (cx, cy), 8, (0, 0, 255), -1)
             cv2.circle(overlay, (cx, cy), 10, (0, 0, 255), 2)
-            cv2.putText(overlay, FINGER_NAMES_CN.get(i, ""),
-                        (cx + 14, cy - 14), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.55, (0, 0, 255), 2)
+            cn_texts.append((FINGER_NAMES_CN.get(i, ""), (cx + 14, cy - 14),
+                             14, (0, 0, 255), True))
         elif is_mcp:
-            # 正常 MCP：实心红圆
             cv2.circle(overlay, (cx, cy), 6, (0, 0, 255), -1)
         else:
-            # 其他关节点（PIP/DIP/TIP）：小红圆
             cv2.circle(overlay, (cx, cy), 4, (50, 50, 255), -1)
 
     # 手腕点特殊标注
@@ -106,7 +133,7 @@ def _draw_skeleton(frame, landmarks, w, h, issue_fingers):
     cv2.circle(overlay, (wx, wy), 7, (255, 255, 255), -1)
     cv2.circle(overlay, (wx, wy), 9, (0, 0, 255), 2)
 
-    return cv2.addWeighted(overlay, 0.75, frame, 0.25, 0)
+    return cv2.addWeighted(overlay, 0.75, frame, 0.25, 0), cn_texts
 
 
 def _analyze_single_hand(landmarks, hand_tag):
@@ -285,6 +312,7 @@ def analyze_video(video_path: Path, output_dir: Path, frame_interval: float = 0.
         # ── 分析每只手 ──
         frame_issues = []
         all_problem_mcps = set()
+        all_cn_texts = []
         annotated = frame_bgr.copy()
 
         for hand_idx, lm_list in enumerate(res.multi_hand_landmarks):
@@ -296,32 +324,37 @@ def analyze_video(video_path: Path, output_dir: Path, frame_interval: float = 0.
             all_problem_mcps.update(problem_mcps)
 
             # ── 绘制 21 点红色骨架 ──
-            annotated = _draw_skeleton(annotated, landmarks, width, height, problem_mcps)
+            annotated, skel_cn_texts = _draw_skeleton(annotated, landmarks, width, height, problem_mcps)
+            all_cn_texts.extend(skel_cn_texts)
 
             # 手标签
             wrist = landmarks[0]
             wx, wy = int(wrist.x * width), int(wrist.y * height)
             hand_color = (0, 0, 255) if problem_mcps else (100, 255, 100)
-            cv2.putText(annotated, f"{hand_tag}({len(hand_issues)}问题)",
-                        (wx - 20, wy - 30), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6, hand_color, 2)
+            all_cn_texts.append((f"{hand_tag}({len(hand_issues)}问题)",
+                                 (wx - 20, wy - 30), 14, hand_color, True))
 
         # ── 打分 ──
         score = _score_frame(frame_issues, len(res.multi_hand_landmarks))
+
+        # 渲染骨架上的中文标签到 annotated
+        _render_cn_texts(annotated, all_cn_texts)
 
         # ── 底部信息栏 ──
         info_h = 80
         info_bar = np.zeros((info_h, annotated.shape[1], 3), dtype=np.uint8)
         info_bar[:] = (25, 25, 30)
+        info_cn_texts = []
         issue_texts = [i["desc"] for i in frame_issues[:4]]
-        cv2.putText(info_bar, f"t={ts:.1f}s | 小节{measure} | 得分:{score:.0f} | 手数:{len(res.multi_hand_landmarks)}",
+
+        cv2.putText(info_bar, f"t={ts:.1f}s | M{measure} | Score:{score:.0f} | Hands:{len(res.multi_hand_landmarks)}",
                     (10, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
         score_color = (0, 255, 100) if score >= 80 else (0, 200, 255) if score >= 60 else (0, 0, 255)
-        cv2.putText(info_bar, f"手型评分: {score:.0f}/100", (10, 45),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, score_color, 2)
+        info_cn_texts.append((f"手型评分: {score:.0f}/100", (10, 38), 16, score_color, True))
         for j, txt in enumerate(issue_texts):
-            cv2.putText(info_bar, f"  ! {txt}", (10, 65 + j * 14),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 150, 255), 1)
+            info_cn_texts.append((f"! {txt}", (10, 60 + j * 16), 12, (0, 150, 255), False))
+
+        _render_cn_texts(info_bar, info_cn_texts)
 
         annotated = np.vstack([annotated, info_bar])
 
