@@ -6,6 +6,7 @@
 <title>AI琴伴 - 智能钢琴陪练系统</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+.icon-img{width:1.2em;height:1.2em;object-fit:contain;display:inline-block;vertical-align:middle}
 :root{
   --pri-1:#FF6B6B;--pri-2:#FF8E53;--pri-3:#FFA07A;
   --grad:linear-gradient(135deg,#FF6B6B,#FF8E53);
@@ -389,6 +390,35 @@ body{
   font-size:11px;font-weight:600;color:var(--text-2);flex-shrink:0;
 }
 
+/* ===== HAND ANALYSIS ===== */
+.hand-analysis-card{background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.hand-score-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.hand-score-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hand-score-val{font-size:28px;font-weight:800}
+.hand-score-grade{padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600}
+.hand-stats{display:flex;gap:10px;margin-bottom:16px}
+.hand-stat{flex:1;text-align:center;background:#F9FAFB;border-radius:12px;padding:10px 8px}
+.hand-stat span{display:block;font-size:20px;font-weight:700;color:var(--text)}
+.hand-stat label{display:block;font-size:11px;color:var(--text-2);margin-top:2px}
+.issue-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.issue-type-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#F9FAFB;border-radius:10px;font-size:12px}
+.issue-type-item .count{font-weight:700;font-size:15px}
+.finger-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px}
+.finger-bar-row .finger-name{width:64px;text-align:right;color:var(--text-2);flex-shrink:0}
+.finger-bar-row .finger-bar{flex:1;height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden}
+.finger-bar-row .finger-bar-fill{height:100%;border-radius:3px;background:var(--purple)}
+.finger-bar-row .finger-count{width:28px;text-align:right;font-weight:600;font-size:12px;flex-shrink:0}
+.worst-frames-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.worst-frame-card{border:1px solid #E5E7EB;border-radius:14px;padding:14px;margin-bottom:12px;background:#FAFBFC}
+.worst-frame-card h4{font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.worst-frame-card h4 .frame-rank{background:var(--danger);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px}
+.worst-frame-img{width:100%;border-radius:10px;margin:8px 0;border:1px solid #E5E7EB}
+.worst-frame-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text-2);margin-bottom:8px}
+.worst-frame-meta span{background:#F3F4F6;padding:3px 8px;border-radius:6px}
+.worst-frame-issues{font-size:11px;width:100%;border-collapse:collapse;margin-top:6px}
+.worst-frame-issues th{background:#F3F4F6;padding:4px 6px;text-align:left;font-weight:600}
+.worst-frame-issues td{padding:3px 6px;border-bottom:1px solid #F3F4F6}
+
 /* ===== REPORTS ===== */
 #page-reports{background:var(--bg)}
 .reports-list{padding:16px}
@@ -481,12 +511,12 @@ body{
   <div class="home-header">
     <div class="home-top">
       <div class="home-logo">
-        <div class="home-logo-icon">🎹</div>
+        <div class="home-logo-icon"><img src="icons/logo.png" class="icon-img" alt="logo"></div>
         <div class="home-title">AI琴伴</div>
       </div>
       <div class="home-actions">
-        <button class="icon-btn" onclick="go('reports')" title="历史报告">📋</button>
-        <button class="icon-btn" onclick="go('settings')" title="设置">⚙️</button>
+        <button class="icon-btn" onclick="go('reports')" title="历史报告"><img src="icons/report.png" class="icon-img" alt="report"></button>
+        <button class="icon-btn" onclick="go('settings')" title="设置"><img src="icons/settings.png" class="icon-img" alt="settings"></button>
       </div>
     </div>
     <div class="home-greeting">
@@ -496,22 +526,22 @@ body{
   </div>
   <div class="home-body">
     <div class="score-card" id="scoreCard">
-      <div class="score-icon empty" id="scoreIcon">🎵</div>
+      <div class="score-icon empty" id="scoreIcon"><img src="icons/note.png" class="icon-img" alt="note"></div>
       <div class="score-info">
         <div class="label">当前曲谱</div>
         <div class="name" id="scoreName">尚未上传</div>
       </div>
     </div>
     <button class="btn btn-upload" id="uploadBtn" onclick="pickScoreFile()">
-      📤 <span id="uploadLabel">上传曲谱</span>
+      <img src="icons/upload.png" class="icon-img" alt="upload"> <span id="uploadLabel">上传曲谱</span>
     </button>
     <input type="file" id="scoreFileInput" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="handleScoreFile(this)">
     <button class="btn btn-primary" onclick="startPractice()">
-      ▶️ 开始练习
+      <img src="icons/play.png" class="icon-img" alt="play"> 开始练习
     </button>
     <div class="tips-card">
       <div class="tips-header">
-        <div class="tips-icon">💡</div>
+        <div class="tips-icon"><img src="icons/tip.png" class="icon-img" alt="tip"></div>
         <div class="tips-title">小贴士</div>
       </div>
       <div class="tip-row"><div class="dot"></div>把手机后置摄像头对准琴键</div>
@@ -528,7 +558,7 @@ body{
     <!-- PC mode: file upload area -->
     <div class="upload-area" id="uploadArea">
       <button class="upload-btn" onclick="pickVideoFile()">
-        🎬 选择视频文件
+        <img src="icons/play.png" class="icon-img" alt="play"> 选择视频文件
       </button>
       <div class="upload-name" id="videoFileName">支持 mp4 / mov 格式</div>
       <input type="file" id="videoFileInput" class="hidden" accept=".mp4,.mov,.m4v" onchange="handleVideoFile(this)">
@@ -574,7 +604,7 @@ body{
     <div class="avatar-container">
       <div class="avatar-glow"></div>
       <div class="avatar">
-        <img class="avatar-img" src="/static/teacher_avatar.png" alt="老师">
+        <img class="avatar-img" src="icons/ePerson.png" alt="老师">
       </div>
     </div>
     <div class="audio-player-wrap" id="audioPlayerWrap">
@@ -839,97 +869,116 @@ function showFeedbackFromAPI(data) {
     </div>
     <div class="metrics-grid fade-up" id="anim-metrics">
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:var(--info)">🎶</div>
+        <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:var(--info)"><img src="icons/rhythm.png" class="icon-img" alt="rhythm"></div>
         <div class="metric-label">节奏稳定</div>
         <div class="metric-val" style="color:var(--info)">${r.rhythm_score}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:var(--success)">🎵</div>
+        <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:var(--success)"><img src="icons/note.png" class="icon-img" alt="note"></div>
         <div class="metric-label">音准准确</div>
         <div class="metric-val" style="color:var(--success)">${r.accuracy_score}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:var(--warn)">🌊</div>
+        <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:var(--warn)"><img src="icons/flow.png" class="icon-img" alt="flow"></div>
         <div class="metric-label">流畅度</div>
         <div class="metric-val" style="color:var(--warn)">${r.fluency_score}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)">✋</div>
+        <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)"><img src="icons/hand.png" class="icon-img" alt="hand"></div>
         <div class="metric-label">手型健康</div>
         <div class="metric-val" style="color:var(--purple)">${r.hand_health_score}</div>
       </div>
     </div>`;
 
-  // ── 手型分析详情（含骨架标注图片） ──
+  // ── 手型详细分析 ──
+  const handScore = r.hand_score ?? r.hand_health_score ?? 0;
+  const gradeColor = handScore >= 85 ? '#10B981' : handScore >= 70 ? '#F59E0B' : '#EF4444';
+  const gradeText = handScore >= 85 ? '优秀' : handScore >= 70 ? '良好' : '需改进';
+  const issueTypes = r.issues_by_type || {};
+  const fingerIssues = r.issues_by_finger || {};
+  const typeNames = r.issue_type_names || {};
   const worstFrames = r.worst_frames || [];
-  if (worstFrames.length) {
-    const itn = {
-      'folded_finger': '折指（PIP关节过度弯曲）',
-      'collapsed_knuckle': '掌关节塌陷',
-      'over_extended': '手指过度伸直',
-      'thumb_tucked': '拇指内扣',
-    };
-    const nms = r.issue_type_names || itn;
-    html += `<div class="issues-card fade-up" id="anim-hand-detail">
-      <div class="issues-header">
-        <div class="issues-icon" style="background:rgba(249,115,22,0.1);color:#F97316">✋</div>
-        <div class="issues-title">手型详情 · 最差 ${worstFrames.length} 帧</div>
-        <div class="issues-count" style="background:rgba(249,115,22,0.1);color:#F97316">${r.hand_score || '?'} 分</div>
-      </div>
-      <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">采样 ${r.total_frames_sampled || 0} 帧，检测到手 ${r.frames_with_hands || 0} 帧，发现 ${r.hand_issues_count || 0} 处问题</p>`;
+  const maxFinger = Math.max(1, ...Object.values(fingerIssues));
 
-    // 问题类型分布
-    const ibt = r.issues_by_type || {};
-    if (Object.keys(ibt).length) {
-      html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">';
-      for (const [t, c] of Object.entries(ibt)) {
-        html += `<span style="padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;background:rgba(249,115,22,0.08);color:#C2410C">${nms[t] || t}: ${c}次</span>`;
-      }
-      html += '</div>';
+  html += `<div class="hand-analysis-card fade-up" id="anim-hand">
+    <div class="hand-score-header">
+      <div class="hand-score-title"><img src="icons/hand.png" class="icon-img" alt="hand" style="width:20px;height:20px"> 手型分析</div>
+      <div><span class="hand-score-val" style="color:${gradeColor}">${handScore}</span><span style="font-size:14px;color:var(--text-2)"> / 100</span></div>
+    </div>
+    <span class="hand-score-grade" style="background:${gradeColor}15;color:${gradeColor}">${gradeText}</span>
+    <div class="hand-stats">
+      <div class="hand-stat"><span>${r.total_frames_sampled || 0}</span><label>采样帧</label></div>
+      <div class="hand-stat"><span>${r.frames_with_hands || 0}</span><label>检测到手</label></div>
+      <div class="hand-stat"><span>${Object.keys(issueTypes).length}</span><label>问题类型</label></div>
+    </div>`;
+
+  // Issue type distribution
+  if (Object.keys(issueTypes).length) {
+    html += '<div class="issue-type-grid">';
+    for (const [key, count] of Object.entries(issueTypes)) {
+      const name = typeNames[key] || key;
+      html += `<div class="issue-type-item"><span>${name}</span><span class="count" style="color:${count > 10 ? '#EF4444' : '#F59E0B'}">${count}</span></div>`;
     }
+    html += '</div>';
+  }
 
-    // 最差帧卡片（含图片）
-    worstFrames.forEach((wf, idx) => {
-      const sc = wf.score >= 80 ? 'var(--success)' : wf.score >= 60 ? 'var(--warn)' : 'var(--danger)';
-      html += `<div style="border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:12px;background:#fafbfc">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <span style="font-weight:800;font-size:16px;color:${sc}">${idx + 1}. ${wf.score}分</span>
-          <span style="color:var(--text-3);font-size:11px">${wf.timestamp}s · M${wf.measure} · ${wf.hands_detected}手 · ${wf.issue_count}问题</span>
+  // Finger distribution
+  if (Object.keys(fingerIssues).length) {
+    html += '<div style="margin-bottom:16px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">问题手指分布</div>';
+    for (const [finger, count] of Object.entries(fingerIssues)) {
+      const pct = Math.round(count / maxFinger * 100);
+      html += `<div class="finger-bar-row"><span class="finger-name">${finger}</span><div class="finger-bar"><div class="finger-bar-fill" style="width:${pct}%"></div></div><span class="finger-count">${count}</span></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Worst frames with skeleton images
+  if (worstFrames.length) {
+    html += '<div class="worst-frames-title"><img src="icons/report.png" class="icon-img" alt="frames" style="width:16px;height:16px">手型最差帧（骨架标注）</div>';
+    worstFrames.forEach((f, idx) => {
+      const rankColor = ['#EF4444','#F97316','#F59E0B','#8B5CF6','#6B7280'][idx] || '#6B7280';
+      html += `<div class="worst-frame-card">
+        <h4><span class="frame-rank" style="background:${rankColor}">第 ${idx + 1} 名</span> 得分: <span style="color:${rankColor};font-weight:700">${f.score ?? '?'} / 100</span></h4>
+        <div class="worst-frame-meta">
+          <span>时间: ${(f.timestamp || 0).toFixed(1)}s</span>
+          <span>小节: ${f.measure || '?'}</span>
+          <span>检测到手: ${f.hands_detected || 0}</span>
+          <span>问题数: ${(f.issues || []).length}</span>
         </div>`;
-      if (wf.issues && wf.issues.length) {
-        html += '<div style="font-size:12px;color:var(--text-2);margin-bottom:8px">';
-        wf.issues.forEach(iss => {
-          html += `<span style="display:inline-block;margin:2px 4px;padding:2px 8px;border-radius:8px;background:${iss.severity==='严重'?'#FEE2E2':'#FEF3C7'};color:${iss.severity==='严重'?'#DC2626':'#D97706'};font-size:11px;font-weight:600">${iss.hand}${iss.finger} ${nms[iss.type] || iss.type}${iss.severity==='严重'?' ⚠':''}</span>`;
+      if (f.issues && f.issues.length) {
+        html += '<table class="worst-frame-issues"><tr><th>手</th><th>手指</th><th>问题</th><th>程度</th></tr>';
+        f.issues.forEach(iss => {
+          const sevColor = iss.severity === '严重' ? '#EF4444' : '#F59E0B';
+          html += `<tr><td>${iss.hand || ''}</td><td>${iss.finger || ''}</td><td>${typeNames[iss.issue_type] || iss.issue_type || ''}</td><td style="color:${sevColor};font-weight:600">${iss.severity || ''}</td></tr>`;
         });
-        html += '</div>';
+        html += '</table>';
       }
-      if (wf.image_base64) {
-        html += `<img src="data:image/jpeg;base64,${wf.image_base64}" style="width:100%;border-radius:10px;border:1px solid #e5e7eb" loading="lazy" alt="手型骨架标注">`;
+      if (f.image_base64) {
+        html += `<img class="worst-frame-img" src="data:image/jpeg;base64,${f.image_base64}" alt="手型骨架标注">`;
       }
       html += '</div>';
     });
     html += '</div>';
   }
 
-  if (r.hand_issues && r.hand_issues.length) {
-    html += `<div class="issues-card fade-up" id="anim-hand">
-      <div class="issues-header">
-        <div class="issues-icon" style="background:rgba(249,115,22,0.1);color:#F97316">📋</div>
-        <div class="issues-title">手型问题列表</div>
-        <div class="issues-count" style="background:rgba(249,115,22,0.1);color:#F97316">${r.hand_issues.length} 处</div>
-      </div>`;
-    r.hand_issues.slice(0, 10).forEach(i => {
-      html += `<div class="issue-item">
-        <div class="issue-measure" style="background:rgba(249,115,22,0.1);color:#F97316">${i.measure || '?'}</div>
-        <div class="issue-info"><div class="issue-subtitle">${i.issue_type || '手型问题'}</div><div class="issue-desc">${i.description || ''}</div></div>
-        <div class="issue-time">${(i.timestamp || 0).toFixed(1)}s</div></div>`;
+  html += '</div>';
+  // Fallback: old-style hand_issues list if no worst_frames available
+  if ((!worstFrames || !worstFrames.length) && r.hand_issues && r.hand_issues.length) {
+    html += '<div class="issues-card fade-up" id="anim-hand-list"><div class="issues-header">';
+    html += '<div class="issues-icon" style="background:rgba(249,115,22,0.1);color:#F97316"><img src="icons/hand.png" class="icon-img" alt="hand"></div>';
+    html += '<div class="issues-title">手型问题详情</div>';
+    html += '<div class="issues-count" style="background:rgba(249,115,22,0.1);color:#F97316">' + r.hand_issues.length + ' 处</div></div>';
+    r.hand_issues.slice(0, 10).forEach(function(i) {
+      html += '<div class="issue-item"><div class="issue-measure" style="background:rgba(249,115,22,0.1);color:#F97316">' + (i.measure || '?') + '</div>';
+      html += '<div class="issue-info"><div class="issue-subtitle">' + (i.issue_type || '手型问题') + '</div><div class="issue-desc">' + (i.description || '') + '</div></div>';
+      html += '<div class="issue-time">' + ((i.timestamp || 0).toFixed(1)) + 's</div></div>';
     });
     html += '</div>';
   }
   if (r.audio_issues && r.audio_issues.length) {
     html += `<div class="issues-card fade-up" id="anim-audio">
       <div class="issues-header">
-        <div class="issues-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)">🎵</div>
+        <div class="issues-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)"><img src="icons/note.png" class="icon-img" alt="note"></div>
         <div class="issues-title">音准问题</div>
         <div class="issues-count" style="background:rgba(139,92,246,0.1);color:var(--purple)">${r.audio_issues.length} 处</div>
       </div>`;
@@ -965,9 +1014,9 @@ function showFeedbackFromAPI(data) {
   setTimeout(() => document.getElementById('anim-comment').classList.add('show'), 600);
   setTimeout(() => typewriter('commentText', r.teacher_comment || '', 2500), 900);
   setTimeout(() => document.getElementById('anim-metrics').classList.add('show'), 1200);
-  setTimeout(() => { const h = document.getElementById('anim-hand-detail'); if (h) h.classList.add('show'); }, 1500);
-  setTimeout(() => { const h = document.getElementById('anim-hand'); if (h) h.classList.add('show'); }, 1800);
-  setTimeout(() => { const a = document.getElementById('anim-audio'); if (a) a.classList.add('show'); }, 2100);
+  setTimeout(() => { const h = document.getElementById('anim-hand'); if (h) h.classList.add('show'); }, 1500);
+  setTimeout(() => { const hl = document.getElementById('anim-hand-list'); if (hl) hl.classList.add('show'); }, 1600);
+  setTimeout(() => { const a = document.getElementById('anim-audio'); if (a) a.classList.add('show'); }, 1800);
   // Auto-play audio once after animations
   setTimeout(() => {
     if (audioUrl && audio) {

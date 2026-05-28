@@ -72,3 +72,12 @@
 - [x] [2026-05-29] **PC Demo 手型图片展示**：API 评估链路接入完整手型分析（21点骨架标注 + base64 图片 + 最差5帧展示），Demo 反馈页新增手型详情卡片（问题类型分布 + 每帧骨架标注图）
 - [x] [2026-05-29] **Demo 页细节优化**：老师头像替换为 `teacher_avatar.png`、品牌名统一为"AI琴伴"、帧卡片标题精简
 - [x] [2026-05-29] **Android APK 构建成功**：移除冲突的 `file_picker` 依赖（WebView 架构已不需要），配置 Gradle 国内镜像源 + Kotlin 增量编译禁用，`app-debug.apk`（148MB）输出成功
+- [x] [2026-05-29] **Demo 页 PNG 图标替换全部 emoji**：15 个图标（logo/note/hand/report/settings 等），PC 端新增 `/icons` 静态路由，WebView 通过 temp 目录 + `loadFile()` 加载本地图片
+- [x] [2026-05-29] **品牌名恢复为 AI琴伴**：Demo.html 标题/头部、main.dart、main.py 全部统一
+- [x] [2026-05-29] **反馈页手型分析全面升级**：对接 `hand_tracker.py` 完整输出（`worst_frames`/`issues_by_type`/`issues_by_finger`），内容对齐 `COMPREHENSIVE_REPORT.html`：
+  - 手型总分 + 等级标签（优秀/良好/需改进，颜色自适应）
+  - 统计行（采样帧数/检测到手数/问题类型数）
+  - 问题类型分布（2 列网格，按次数降序）
+  - 问题手指分布（横向柱状图，紫色填充 + 次数）
+  - 手型最差 5 帧骨架标注图（排名得分 + 小节/时间 + 问题详情表 + base64 原图）
+  - 降级兼容：无 `worst_frames` 时自动回退到简化问题列表

@@ -15,7 +15,7 @@ class AiQinbanApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '琴伴',
+      title: 'AI琴伴',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

@@ -8,11 +8,14 @@
 
 ## [Unreleased]
 
-### Fixed
-- [2026-05-29] **Android APK 编译成功**：移除 `file_picker` 依赖（WebView 架构不再需要）解决 compileSdk 34 vs 36 冲突；配置阿里云 Maven 镜像源解决 Gradle 下载超时；禁用 Kotlin 增量编译绕过 Windows AGP 9.x 缓存损坏 bug
-
 ### Added
-- [2026-05-29] **PC Demo 手型骨架标注图片展示**：API 评估链路接入完整手型分析（21点骨架标注 + base64 编码），Demo 反馈页新增手型详情卡片（问题类型分布 + 最差5帧骨架图内联渲染）
+- [2026-05-29] **反馈页手型分析全面升级**：手型总分+等级标签、问题类型分布网格、问题手指分布柱状图、最差5帧 MediaPipe 骨架标注图（含 base64 大图 + 问题详情表），完全对齐 COMPREHENSIVE_REPORT.html 样式，无 worst_frames 时自动降级兼容
+- [2026-05-29] **Demo 页 PNG 图标替换全部 emoji**：15 个图标文件，PC 端 `/icons` 静态路由，WebView temp 目录 + `loadFile()` 加载
+- [2026-05-29] **品牌名恢复为 AI琴伴**：Demo.html / main.dart / main.py 统一
+- [2026-05-29] **PC Demo 手型骨架标注图片展示**
+
+### Fixed
+- [2026-05-29] **Android APK 编译成功**：移除 `file_picker` 依赖（WebView 架构不再需要）解决 compileSdk 34 vs 36 冲突；配置阿里云 Maven 镜像源；禁用 Kotlin 增量编译：API 评估链路接入完整手型分析（21点骨架标注 + base64 编码），Demo 反馈页新增手型详情卡片（问题类型分布 + 最差5帧骨架图内联渲染）
 - [2026-05-29] **hand_tracker.py 完整重写**：`analyze_hand_video()` 全流程（抽帧 → MediaPipe → 骨架绘制 → 评分 → 最差N帧 → base64），合并自 `tests/analyze_hands.py`
 
 ### Changed

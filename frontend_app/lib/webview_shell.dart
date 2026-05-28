@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'app_config.dart';
@@ -29,8 +30,31 @@ class _WebViewShellState extends State<WebViewShell> {
   }
 
   Future<void> _initWebView() async {
-    // Load HTML from assets
     final html = await rootBundle.loadString('assets/demo/Demo.html');
+
+    // Extract HTML + icons to temp dir so WebView can resolve relative <img> paths
+    final tmpDir = await getTemporaryDirectory();
+    final demoDir = Directory('${tmpDir.path}/demo');
+    final iconsDir = Directory('${demoDir.path}/icons');
+    if (!await iconsDir.exists()) {
+      await iconsDir.create(recursive: true);
+    }
+
+    final iconNames = [
+      'clock.png', 'ePerson.png', 'flow.png', 'hand.png',
+      'logo.png', 'note.png', 'play.png', 'quote.png',
+      'report.png', 'reset.png', 'rhythm.png', 'settings.png',
+      'speaker.png', 'tip.png', 'upload.png',
+    ];
+    for (final name in iconNames) {
+      try {
+        final data = await rootBundle.load('assets/icons/$name');
+        await File('${iconsDir.path}/$name').writeAsBytes(data.buffer.asUint8List());
+      } catch (_) {}
+    }
+
+    final htmlPath = '${demoDir.path}/index.html';
+    await File(htmlPath).writeAsString(html);
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -41,7 +65,6 @@ class _WebViewShellState extends State<WebViewShell> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageFinished: (_) {
-            // Inject backend URL from AppConfig so phone can reach PC
             _controller.runJavaScript(
               "localStorage.setItem('baseUrl', '${AppConfig.baseUrl}');"
               "BACKEND_BASE = '${AppConfig.baseUrl}';",
@@ -49,7 +72,7 @@ class _WebViewShellState extends State<WebViewShell> {
           },
         ),
       )
-      ..loadHtmlString(html);
+      ..loadFile(htmlPath);
 
     setState(() {});
   }

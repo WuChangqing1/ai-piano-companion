@@ -198,6 +198,27 @@
 
 ---
 
+## 2026-05-29 会话（手型分析报告升级 + 图标替换 + 品牌名修正）
+
+**做了什么**：
+- 反馈页手型分析全面升级，对接 `hand_tracker.py` 完整输出（`hand_score`/`worst_frames`/`issues_by_type`/`issues_by_finger`/`issue_type_names`）：
+  - 手型总分 + 等级标签（优秀≥85 绿 / 良好≥70 橙 / 需改进<70 红）
+  - 统计行（采样帧 / 检测到手 / 问题类型数）
+  - 问题类型分布 2 列网格（按次数降序）
+  - 问题手指分布柱状图（紫色横向条 + 次数标注）
+  - 最差 5 帧 MediaPipe 21 点骨架标注图（base64 JPEG + 排名得分 + 时间/小节/手数 + 问题详情表）
+  - 自动降级：无 worst_frames 时回退到简化问题列表
+- PNG 图标替换全部 emoji（logo/note/hand/report/settings 等 15 个），PC 端新增 `/icons` 静态路由，WebView temp 目录 + `loadFile()` 加载
+- 品牌名恢复为 AI琴伴（Demo.html / main.dart / main.py）
+- 老师头像 emoji → `ePerson.png`
+- 图标 CSS 修复（`1.2em` 替代 `60%` 解决按钮内图标过大）
+- APK 构建成功
+
+**下次继续**：
+- APK 真机测试（相机录制 + 上传 + 手型骨架图展示验证）
+
+---
+
 ## 2026-05-29 会话（APK 编译修复 + 构建成功）
 
 **做了什么**：

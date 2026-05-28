@@ -20,7 +20,7 @@ from api import score, evaluate, config as config_api, reports, auth
 from db.database import init_db
 
 app = FastAPI(
-    title="AI 琴伴 - Backend",
+    title="AI琴伴 - Backend",
     description="多模态钢琴陪练后端。允许用户在 App 内自定义模型 API。",
     version="0.1.0",
 )
@@ -35,7 +35,10 @@ app.add_middleware(
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 _STATIC_DIR.mkdir(parents=True, exist_ok=True)
+_ICONS_DIR = _STATIC_DIR / "icons"
+_ICONS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+app.mount("/icons", StaticFiles(directory=str(_ICONS_DIR)), name="icons")
 
 app.include_router(auth.router)
 app.include_router(config_api.router)
@@ -56,7 +59,7 @@ async def root():
     if demo_path.exists():
         return FileResponse(demo_path)
     return {
-        "service": "琴伴 backend",
+        "service": "AI琴伴 backend",
         "version": "0.1.0",
         "docs": "/docs",
     }
