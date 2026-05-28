@@ -91,7 +91,7 @@ class _WebViewShellState extends State<WebViewShell> {
     if (_recorder == null) return;
     try {
       final path = await _recorder!.stopRecording();
-      await _recorder!.dispose();
+      _recorder!.dispose();
       _recorder = null;
 
       if (path == null) {

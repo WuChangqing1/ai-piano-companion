@@ -4,19 +4,20 @@
 
 ## 进行中
 
+- [ ] **APK 真机测试**：相机录制 + 上传 PC 后端 + 报告查看 + 音频播放器验证
 - [ ] 端到端联调测试（视频上传 → 手型+音频分析 → 评语 → TTS → 报告）
-- [ ] MusicXML→MIDI tempo 读取逻辑回迁到生产代码 `omr_parser.py`
 
 ## 待办
 
+- [ ] **Android 正式发布**：release 签名配置 + `flutter build apk --release`（当前仅有 debug APK 148MB）
 - [ ] 分支管理：切回 `develop` 分支进行日常开发
 - [ ] 用户鉴权完善（当前为占位实现）
 - [ ] Demo 视频录制（30秒展示视频）
 - [ ] 数字人形象优化（Lottie 动画替换）
 - [ ] MusicXML→MIDI 使用 `divisions` 元素做精确时序（替代简化的 type→duration 映射）
+- [ ] MusicXML→MIDI tempo 读取逻辑回迁到生产代码 `omr_parser.py`
 - [ ] 报告 `skipped_by_filter` 格式化显示（当前显示为 dict repr）
 - [ ] basic-pitch 转录准确率验证（播放转录 MIDI 对比原音频）
-- [ ] APK 真机测试（相机录制 + 上传 PC 后端 + 报告查看）
 
 ## 已完成
 
@@ -70,3 +71,4 @@
 - [x] [2026-05-29] **PC 一键演示脚本** `demo_pc.bat`：自动检查后端 + CosyVoice + 执行流水线 + 打开浏览器
 - [x] [2026-05-29] **PC Demo 手型图片展示**：API 评估链路接入完整手型分析（21点骨架标注 + base64 图片 + 最差5帧展示），Demo 反馈页新增手型详情卡片（问题类型分布 + 每帧骨架标注图）
 - [x] [2026-05-29] **Demo 页细节优化**：老师头像替换为 `teacher_avatar.png`、品牌名统一为"AI琴伴"、帧卡片标题精简
+- [x] [2026-05-29] **Android APK 构建成功**：移除冲突的 `file_picker` 依赖（WebView 架构已不需要），配置 Gradle 国内镜像源 + Kotlin 增量编译禁用，`app-debug.apk`（148MB）输出成功

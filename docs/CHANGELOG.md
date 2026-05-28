@@ -8,6 +8,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- [2026-05-29] **Android APK 编译成功**：移除 `file_picker` 依赖（WebView 架构不再需要）解决 compileSdk 34 vs 36 冲突；配置阿里云 Maven 镜像源解决 Gradle 下载超时；禁用 Kotlin 增量编译绕过 Windows AGP 9.x 缓存损坏 bug
+
 ### Added
 - [2026-05-29] **PC Demo 手型骨架标注图片展示**：API 评估链路接入完整手型分析（21点骨架标注 + base64 编码），Demo 反馈页新增手型详情卡片（问题类型分布 + 最差5帧骨架图内联渲染）
 - [2026-05-29] **hand_tracker.py 完整重写**：`analyze_hand_video()` 全流程（抽帧 → MediaPipe → 骨架绘制 → 评分 → 最差N帧 → base64），合并自 `tests/analyze_hands.py`

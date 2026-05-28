@@ -20,8 +20,6 @@ dependencies:
   audioplayers: ^6.1.0
   # 本地持久化(模型配置 + baseUrl)
   shared_preferences: ^2.3.2
-  # 文件选择(上传曲谱)
-  file_picker: ^8.1.2
   # 权限
   permission_handler: ^11.3.1
   # 路径

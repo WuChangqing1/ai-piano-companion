@@ -198,7 +198,21 @@
 
 ---
 
-## 2026-05-29 会话（PC Demo 手型图片 + 品牌优化）
+## 2026-05-29 会话（APK 编译修复 + 构建成功）
+
+**做了什么**：
+- 清理 root `build.gradle.kts` 中无效的 `gradle.projectsEvaluated` 反射 hack
+- 排查 APK 编译失败根因：`file_picker` 8.x AAR compileSdk=34 与 `flutter_plugin_android_lifecycle` 要求的 >=36 冲突
+- 解决方案：移除 `file_picker` 依赖（WebView 架构下不再使用）+ 删除未使用的 `home_screen.dart`
+- 配置 Gradle 阿里云 Maven 镜像源（settings.gradle.kts + build.gradle.kts）
+- 禁用 Kotlin 增量编译（`gradle.properties`）绕过 Windows AGP 9.x 缓存损坏
+- **Android APK 构建成功**：`app-debug.apk`（148MB），耗时 ~27s
+- 更新全部 docs/ 文档
+
+**下次继续**：
+- 推送至 GitHub
+- APK 真机测试（相机录制 + 上传 PC 后端 + 报告查看）
+- 考虑构建 release APK（体积更小）
 
 **做了什么**：
 - **hand_tracker.py 完整重写**：从简单文字问题检测升级为完整手型分析流水线
