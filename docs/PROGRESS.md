@@ -68,3 +68,5 @@
 - [x] [2026-05-29] **后端路由扩展**：`/demo` 路由（PC 浏览器演示页）、`/api/cosyvoice/speakers` 代理（手机端获取 CosyVoice 音色列表）
 - [x] [2026-05-29] **Flutter Android APK 壳**：WebView 加载 Demo.html + JavaScriptChannel 桥接 + 原生相机录制 + Dio 上传后端
 - [x] [2026-05-29] **PC 一键演示脚本** `demo_pc.bat`：自动检查后端 + CosyVoice + 执行流水线 + 打开浏览器
+- [x] [2026-05-29] **PC Demo 手型图片展示**：API 评估链路接入完整手型分析（21点骨架标注 + base64 图片 + 最差5帧展示），Demo 反馈页新增手型详情卡片（问题类型分布 + 每帧骨架标注图）
+- [x] [2026-05-29] **Demo 页细节优化**：老师头像替换为 `teacher_avatar.png`、品牌名统一为"AI琴伴"、帧卡片标题精简

@@ -9,6 +9,14 @@
 ## [Unreleased]
 
 ### Added
+- [2026-05-29] **PC Demo 手型骨架标注图片展示**：API 评估链路接入完整手型分析（21点骨架标注 + base64 编码），Demo 反馈页新增手型详情卡片（问题类型分布 + 最差5帧骨架图内联渲染）
+- [2026-05-29] **hand_tracker.py 完整重写**：`analyze_hand_video()` 全流程（抽帧 → MediaPipe → 骨架绘制 → 评分 → 最差N帧 → base64），合并自 `tests/analyze_hands.py`
+
+### Changed
+- [2026-05-29] **demo.html 品牌名统一**："琴伴" → "AI琴伴"
+- [2026-05-29] **demo.html 老师头像**：emoji `👩‍🏫` → `teacher_avatar.png` 真实图片
+- [2026-05-29] **demo.html 帧卡片标题精简**："第 1 名 54 分 11.5s · 第 6 小节" → "1. 54分 11.5s · M6"
+- [2026-05-29] **evaluate.py** 使用 `analyze_hands()` 替代 `detect_hand_issues()`，API 响应包含完整手型数据
 - [2026-05-29] **PC + Android 双端 Demo** `Demo.html`：去 AI 化 + 真实 API 调用 + CosyVoice 音色选择 + emoji 图标 + `<audio controls>` 完整播放器 + PC/WebView 双模式检测
 - [2026-05-29] **后端 `/demo` 路由**：PC 浏览器直接访问演示页面
 - [2026-05-29] **CosyVoice 音色代理** `GET /api/cosyvoice/speakers`：解决手机无法访问 127.0.0.1:9880 的问题

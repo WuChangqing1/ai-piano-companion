@@ -10,7 +10,7 @@ import aiofiles
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from ai_models.hand_tracker import detect_hand_issues
+from ai_models.hand_tracker import analyze_hands
 from ai_models.audio_amt import transcribe_and_diff
 from ai_models.llm_client import generate_teacher_comment
 from ai_models.tts_engine import synthesize
@@ -23,14 +23,13 @@ _UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads" / "videos"
 _UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _compose_scores(audio_diff: dict, hand_issues: list) -> dict:
+def _compose_scores(audio_diff: dict, hand_data: dict) -> dict:
     wrong = len(audio_diff["wrong"])
     missing = len(audio_diff["missing"])
-    hand_n = len(hand_issues)
 
     accuracy = max(40, 100 - wrong * 8 - missing * 6)
     fluency = max(50, 100 - (wrong + missing) * 5)
-    hand_health = max(50, 100 - hand_n * 12)
+    hand_health = hand_data.get("hand_score", max(50, 100 - len(hand_data.get("hand_issues", [])) * 12))
     rhythm = audio_diff["rhythm_score"]
     overall = round((accuracy + fluency + hand_health + rhythm) / 4)
     return {
@@ -58,8 +57,9 @@ async def evaluate(
         while chunk := await file.read(1024 * 1024):
             await f.write(chunk)
 
-    # 1. 视觉
-    hand_issues = detect_hand_issues(video_path)
+    # 1. 视觉 — 完整手型分析（含骨架标注 + base64 图片）
+    hand_data = analyze_hands(video_path)
+    hand_issues = hand_data.get("hand_issues", [])
     # 2. 音频
     audio_diff = transcribe_and_diff(video_path, None)
     # 3. LLM 评语
@@ -71,7 +71,7 @@ async def evaluate(
     # 4. TTS
     audio_file = await synthesize(comment)
 
-    scores = _compose_scores(audio_diff, hand_issues)
+    scores = _compose_scores(audio_diff, hand_data)
     report_uid = uuid.uuid4().hex
 
     report_payload = {
@@ -83,6 +83,14 @@ async def evaluate(
         "hand_issues": hand_issues,
         "audio_issues": audio_diff["wrong"] + audio_diff["missing"],
         "duration_seconds": audio_diff["duration"],
+        # 手型完整分析数据（含图片）
+        "hand_score": hand_data["hand_score"],
+        "worst_frames": hand_data["worst_frames"],
+        "issues_by_type": hand_data.get("issues_by_type", {}),
+        "issues_by_finger": hand_data.get("issues_by_finger", {}),
+        "issue_type_names": hand_data.get("issue_type_names", {}),
+        "total_frames_sampled": hand_data["total_frames_sampled"],
+        "frames_with_hands": hand_data["frames_with_hands"],
     }
 
     # 持久化

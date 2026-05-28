@@ -198,6 +198,31 @@
 
 ---
 
+## 2026-05-29 会话（PC Demo 手型图片 + 品牌优化）
+
+**做了什么**：
+- **hand_tracker.py 完整重写**：从简单文字问题检测升级为完整手型分析流水线
+  - 新增 `analyze_hand_video()`：抽帧(0.5s) → MediaPipe 21点 → 红色骨架标注 → 底部信息栏 → 评分 → 最差5帧筛选 → base64 编码
+  - 新增 `analyze_hands()` 入口（Mock fallback），保留 `detect_hand_issues()` 向后兼容
+  - 功能合并自 `tests/analyze_hands.py`，PIL + 微软雅黑中文渲染
+- **evaluate.py 升级**：调用 `analyze_hands()` 替代 `detect_hand_issues()`，API 响应新增字段：
+  - `hand_score`、`worst_frames`（含 base64 骨架标注图片）、`issues_by_type`、`issues_by_finger`、`issue_type_names`、`total_frames_sampled`、`frames_with_hands`
+- **demo.html 手型详情展示**：反馈页新增「手型详情 · 最差 N 帧」卡片
+  - 问题类型分布标签 + 每帧得分/时间/小节 + 问题标签（严重/轻度）+ 骨架标注图片内联渲染
+- **demo.html 细节优化**：
+  - 老师头像从 emoji 替换为 `teacher_avatar.png`（backend/frontTea.png → static/teacher_avatar.png）
+  - 品牌名从"琴伴"改为"AI琴伴"
+  - 帧卡片标题精简：`第 1 名 54 分 11.5s · 第 6 小节` → `1. 54分 11.5s · M6`
+- **验证测试**：test3/comody.mp4 手型分析通过（评分 91，162 帧采样，5 帧 ~100KB base64 图片）
+
+**git commit**: 待提交
+
+**下次继续**：
+- 推送至 GitHub
+- 端到端联调测试
+
+---
+
 
 
 
