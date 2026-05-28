@@ -190,7 +190,7 @@
 - 创建 `demo_pc.bat` 一键演示脚本
 - Android APK 编译卡住超过 1 小时（Gradle 首次构建下载依赖超时），已停止进程
 
-**git commit**: 待提交
+**git commit**: `004b924`
 
 **下次继续**：
 - 排查 Android APK 编译卡住原因（Gradle 依赖下载问题 / 网络 / 代理）
@@ -215,7 +215,7 @@
   - 帧卡片标题精简：`第 1 名 54 分 11.5s · 第 6 小节` → `1. 54分 11.5s · M6`
 - **验证测试**：test3/comody.mp4 手型分析通过（评分 91，162 帧采样，5 帧 ~100KB base64 图片）
 
-**git commit**: 待提交
+**git commit**: `122c1b3`
 
 **下次继续**：
 - 推送至 GitHub
