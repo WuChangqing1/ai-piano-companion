@@ -147,6 +147,8 @@
   - 含手型分析、音频比对、练习建议三大部分
 - 更新 PROGRESS.md / CHANGELOG.md
 
+**git commit**: `dd9bed7`
+
 **下次继续**：
 - 验证 basic-pitch 转录准确性（播放转录 MIDI 对比原音频）
 - 确认综合报告中图片是否能正常显示
